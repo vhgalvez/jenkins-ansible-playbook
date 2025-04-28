@@ -8,27 +8,35 @@ Este repositorio instala Jenkins en un clúster Kubernetes usando Helm + Ansible
 - `playbooks/`: Playbooks principales.
 - `roles/`: Roles Ansible (Jenkins).
 
+## Requisitos
+- **Ansible**: Instalado en tu máquina local.
+- **Cluster Kubernetes**: Configurado y accesible.
+- **Helm**: Instalado y configurado.
+
 ## Uso rápido
-```bash
-ansible-playbook -i inventory/hosts.ini playbooks/install_jenkins.yml
+1. **Instalar las colecciones necesarias:**
+   ```bash
+   ansible-galaxy collection install kubernetes.core
+   ```
 
-Requisitos
-Ansible
+2. **Ejecutar el playbook apuntando a tu inventario:**
+   ```bash
+   ansible-playbook -i inventory/hosts.ini playbooks/install_jenkins.yml
+   ```
 
-Kubernetes cluster
+## 🔥 Siguientes pasos
+1. **Crea un repositorio en GitHub:**
+   - Nombre sugerido: `jenkins-ansible-playbook`
 
-Helm instalado
+2. **Sube esta estructura básica al repositorio.**
 
-yaml
-Copiar
-Editar
+3. **Inicializa el `README.md` con la información proporcionada.**
 
----
+4. (Opcional) **Activar entorno virtual de Python si tienes uno configurado:**
+   ```bash
+   source venv/bin/activate
+   ```
 
-## 🔥 Siguientes pasos:
-1. **Crea un repositorio en GitHub:**  
-   Nombre sugerido: `jenkins-ansible-playbook`
-   
-2. **Sube esta estructura básica.**
-
-3. **Inicializa el `README.md`
+## Notas adicionales
+- Asegúrate de que tu clúster Kubernetes esté operativo y que Helm esté correctamente configurado para interactuar con él.
+- Personaliza las variables en `group_vars/all.yml` según tus necesidades específicas antes de ejecutar el playbook.
