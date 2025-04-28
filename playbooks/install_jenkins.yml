@@ -1,0 +1,6 @@
+# playbooks\install_jenkins.yml
+- name: Install Jenkins with Helm
+  hosts: masters
+  become: yes
+  roles:
+    - jenkins

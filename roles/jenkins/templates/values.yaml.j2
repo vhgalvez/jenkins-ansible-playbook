@@ -1,0 +1,9 @@
+controller:
+  ingress:
+    enabled: true
+    hostName: "{{ jenkins_ingress_host }}"
+    annotations:
+      kubernetes.io/ingress.class: traefik
+    tls:
+      - hosts:
+          - "{{ jenkins_ingress_host }}"

@@ -1,0 +1,5 @@
+helm_namespace: jenkins
+jenkins_chart_version: "4.5.0"
+jenkins_values_template: "values.yaml.j2"
+jenkins_release_name: jenkins
+jenkins_ingress_host: "jenkins.local"
