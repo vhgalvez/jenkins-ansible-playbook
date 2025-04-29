@@ -38,13 +38,13 @@ Este repositorio instala Jenkins en un clúster Kubernetes usando Helm + Ansible
    ```
 
 ## Notas adicionales
+
 - Asegúrate de que tu clúster Kubernetes esté operativo y que Helm esté correctamente configurado para interactuar con él.
 - Personaliza las variables en `group_vars/all.yml` según tus necesidades específicas antes de ejecutar el playbook.
 
 
 
 sudo pkill -f "kubectl port-forward"
-
 
 # 🔁 Jenkins (expuesto en 32000 desde dentro del clúster al exterior)
 nohup kubectl port-forward -n jenkins svc/jenkins --address 0.0.0.0 32000:8080 > /tmp/jenkins-port-forward.log 2>&1 &
@@ -88,10 +88,12 @@ sudo pkill -f "kubectl port-forward"
 kubectl get svc -A -o wide | grep -E 'jenkins|grafana|prometheus|longhorn'
 
 # 3. Crear todos los port-forwards
+
 nohup kubectl port-forward -n jenkins svc/jenkins --address 0.0.0.0 32000:8080 > /tmp/jenkins-port-forward.log 2>&1 &
 nohup kubectl port-forward -n monitoring svc/prometheus-server --address 0.0.0.0 32001:80 > /tmp/prometheus-port-forward.log 2>&1 &
 nohup kubectl port-forward -n monitoring svc/grafana --address 0.0.0.0 32002:3000 > /tmp/grafana-port-forward.log 2>&1 &
 nohup kubectl port-forward -n longhorn-system svc/longhorn-frontend --address 0.0.0.0 32003:80 > /tmp/longhorn-port-forward.log 2>&1 &
 
 # 4. Comprobar puertos abiertos
+
 sudo ss -tuln | grep -E '32000|32001|32002|32003'
