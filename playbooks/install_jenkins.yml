@@ -1,6 +1,6 @@
- ---
+---
 # 🧩 playbooks/install_jenkins.yml
-# Playbook maestro para instalar Jenkins
+# Playbook maestro para instalar Jenkins de forma modular
 
 - name: Cargar variables comunes
   hosts: controller
@@ -8,8 +8,9 @@
   vars_files:
     - ../group_vars/all.yml
   tasks:
-    - name: Verificar conexión
-      ping:
+    - name: Confirmar carga de variables
+      debug:
+        msg: "Variables cargadas correctamente."
 
 - name: 1. Copiar values.yaml a los masters
   import_playbook: master_copy_values.yml
