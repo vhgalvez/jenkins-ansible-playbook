@@ -15,7 +15,7 @@
     - name: Copiar values.yaml en el master
       ansible.builtin.copy:
         src: /tmp/values.yaml
-        dest: /home/core/values.yaml
+        dest: /tmp/values.yaml
         owner: core
         group: core
         mode: '0644'
