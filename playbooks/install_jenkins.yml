@@ -2,5 +2,6 @@
 - name: Install Jenkins with Helm
   hosts: masters
   become: yes
+  gather_facts: false   # 🔥 Importante para sistemas como Flatcar Linux
   roles:
     - jenkins
