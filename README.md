@@ -43,51 +43,55 @@ Este repositorio instala Jenkins en un clúster Kubernetes usando Helm + Ansible
 
 
 
-
-ps aux | grep port-forward
-Matar todos los port-forward activos:
-
-
 sudo pkill -f "kubectl port-forward"
 
-nohup kubectl port-forward svc/jenkins 8080:8080 -n jenkins --address 0.0.0.0 > /tmp/jenkins-port-forward.log 2>&1 &
 
+# 🔁 Jenkins (expuesto en 32000 desde dentro del clúster al exterior)
+nohup kubectl port-forward -n jenkins svc/jenkins --address 0.0.0.0 32000:8080 > /tmp/jenkins-port-forward.log 2>&1 &
 
-kubectl port-forward svc/jenkins 8080:8080 -n jenkins --address 0.0.0.0
-
-
-
-
-
-✅ 1. Limpiar procesos previos (opcional, recomendado)
-bash
-Copiar
-Editar
-# Matar cualquier port-forward previo que esté ocupando puertos
-sudo pkill -f "kubectl port-forward"
-✅ 2. Jenkins (http://192.168.0.15:8080)
-bash
-Copiar
-Editar
-nohup kubectl port-forward svc/jenkins 8080:8080 -n jenkins --address 0.0.0.0 > /tmp/jenkins-port-forward.log 2>&1 &
-✅ 3. Prometheus (http://192.168.0.15:32001)
-bash
-Copiar
-Editar
-
+# 📊 Prometheus (expuesto en 32001)
 nohup kubectl port-forward -n monitoring svc/prometheus-server --address 0.0.0.0 32001:80 > /tmp/prometheus-port-forward.log 2>&1 &
 
-✅ 4. Grafana (http://192.168.0.15:32002)
-bash
-Copiar
-Editar
-nohup kubectl port-forward -n monitoring svc/grafana --address 0.0.0.0 32002:3000 > /tmp
+# 📈 Grafana (expuesto en 32002)
+nohup kubectl port-forward -n monitoring svc/grafana --address 0.0.0.0 32002:3000 > /tmp/grafana-port-forward.log 2>&1 &
 
+# 🧠 Longhorn (expuesto en 32003) — nombre correcto: longhorn-frontend
+nohup kubectl port-forward -n longhorn-system svc/longhorn-frontend --address 0.0.0.0 32003:80 > /tmp/longhorn-port-forward.log 2>&1 &
 
 
 kubectl get svc -A -o wide | grep -E 'jenkins|grafana|prometheus|longhorn'
 
+| Servicio    | Tipo      | Puerto interno | NodePort  |
+|-------------|-----------|----------------|-----------|
+| Jenkins     | NodePort  | 8080            | 32000     |
+| Prometheus  | ClusterIP | 80              | (port-forward 32001) |
+| Grafana     | ClusterIP | 3000            | (port-forward 32002) |
+| Longhorn    | NodePort  | 80              | 32003     |
+
+
+sudo ss -tuln | grep -E '32000|32001|32002|32003'
+
+
+| Servicio    | URL de acceso                                |
+|-------------|-----------------------------------------------|
+| Jenkins     | http://192.168.0.15:32000                     |
+| Prometheus  | http://192.168.0.15:32001                     |
+| Grafana     | http://192.168.0.15:32002                     |
+| Longhorn    | http://192.168.0.15:32003                     |
 
 
 
-nohup kubectl port-forward -n longhorn-system svc/longhorn-system  --address 0.0.0.0 32001:80 > /tmp/prometheus-port-forward.log 2>&1 &
+# 1. Matar port-forward anteriores
+sudo pkill -f "kubectl port-forward"
+
+# 2. Verificar servicios
+kubectl get svc -A -o wide | grep -E 'jenkins|grafana|prometheus|longhorn'
+
+# 3. Crear todos los port-forwards
+nohup kubectl port-forward -n jenkins svc/jenkins --address 0.0.0.0 32000:8080 > /tmp/jenkins-port-forward.log 2>&1 &
+nohup kubectl port-forward -n monitoring svc/prometheus-server --address 0.0.0.0 32001:80 > /tmp/prometheus-port-forward.log 2>&1 &
+nohup kubectl port-forward -n monitoring svc/grafana --address 0.0.0.0 32002:3000 > /tmp/grafana-port-forward.log 2>&1 &
+nohup kubectl port-forward -n longhorn-system svc/longhorn-frontend --address 0.0.0.0 32003:80 > /tmp/longhorn-port-forward.log 2>&1 &
+
+# 4. Comprobar puertos abiertos
+sudo ss -tuln | grep -E '32000|32001|32002|32003'
