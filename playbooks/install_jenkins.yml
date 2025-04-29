@@ -1,10 +1,15 @@
 # playbooks/install_jenkins.yml
+
 - name: Install Jenkins with Helm
   hosts: masters
   gather_facts: false
   serial: 1
   vars_files:
     - ../group_vars/all.yml
+  vars:
+    ansible_shell_executable: /bin/bash    # 🔥 Usa bash directamente
+    ansible_python_interpreter: /bin/false  # 🔥 NO uses Python (porque no hay)
+
 
   tasks:
     - name: Copiar values.yaml.j2 a /tmp/values.yaml en el controlador
