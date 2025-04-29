@@ -1,0 +1,30 @@
+---
+# 🧹 Desinstalar Jenkins de Kubernetes usando Ansible
+
+- name: Desinstalar Jenkins de Kubernetes
+  hosts: controller
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  environment:
+    PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+    KUBECONFIG: "/home/victory/.kube/config"
+
+  tasks:
+    - name: Confirmar carga de variables
+      debug:
+        msg: "🚀 Iniciando desinstalación de Jenkins..."
+
+    - name: Desinstalar release de Helm de Jenkins
+      shell: |
+        helm uninstall {{ jenkins_release_name }} -n {{ helm_namespace }} || true
+      ignore_errors: true
+
+    - name: Eliminar namespace de Jenkins (opcional)
+      shell: |
+        kubectl delete namespace {{ helm_namespace }} || true
+      ignore_errors: true
+
+    - name: Confirmar desinstalación completa
+      debug:
+        msg: "✅ Jenkins y el namespace '{{ helm_namespace }}' eliminados correctamente."
