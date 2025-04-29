@@ -40,3 +40,21 @@ Este repositorio instala Jenkins en un clúster Kubernetes usando Helm + Ansible
 ## Notas adicionales
 - Asegúrate de que tu clúster Kubernetes esté operativo y que Helm esté correctamente configurado para interactuar con él.
 - Personaliza las variables en `group_vars/all.yml` según tus necesidades específicas antes de ejecutar el playbook.
+
+
+
+📋 Para verificar o detener:
+Ver estado:
+
+bash
+Copiar
+Editar
+ps aux | grep port-forward
+Matar todos los port-forward activos:
+
+bash
+Copiar
+Editar
+sudo pkill -f "kubectl port-forward"
+
+nohup kubectl port-forward svc/jenkins 8080:8080 -n jenkins --address 0.0.0.0 > /tmp/jenkins-port-forward.log 2>&1 &
