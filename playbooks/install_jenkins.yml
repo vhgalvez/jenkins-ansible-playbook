@@ -2,6 +2,8 @@
 - name: Install Jenkins with Helm
   hosts: masters
   become: yes
-  gather_facts: false   # 🔥 Importante para sistemas como Flatcar Linux
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml   # <<-- 🔥 Cargamos manualmente las variables
   roles:
     - jenkins
