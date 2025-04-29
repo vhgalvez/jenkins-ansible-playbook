@@ -6,10 +6,10 @@
   vars_files:
     - ../group_vars/all.yml
   tasks:
-    - name: Copiar values.yaml.j2 a /home/core/values.yaml
-      copy:
-        src: roles/jenkins/templates/values.yaml.j2
-        dest: /home/core/values.yaml
+    - name: Copiar values.yaml.j2 a /home/core/values.yaml en el controlador
+      ansible.builtin.copy:
+        src: ../roles/jenkins/templates/values.yaml.j2
+        dest: /tmp/values.yaml
       delegate_to: localhost
 
     - name: Copiar values.yaml en el master
