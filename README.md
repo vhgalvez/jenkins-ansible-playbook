@@ -74,7 +74,9 @@ nohup kubectl port-forward svc/jenkins 8080:8080 -n jenkins --address 0.0.0.0 > 
 bash
 Copiar
 Editar
+
 nohup kubectl port-forward -n monitoring svc/prometheus-server --address 0.0.0.0 32001:80 > /tmp/prometheus-port-forward.log 2>&1 &
+
 ✅ 4. Grafana (http://192.168.0.15:32002)
 bash
 Copiar
@@ -84,3 +86,8 @@ nohup kubectl port-forward -n monitoring svc/grafana --address 0.0.0.0 32002:300
 
 
 kubectl get svc -A -o wide | grep -E 'jenkins|grafana|prometheus|longhorn'
+
+
+
+
+nohup kubectl port-forward -n longhorn-system svc/longhorn-system  --address 0.0.0.0 32001:80 > /tmp/prometheus-port-forward.log 2>&1 &
