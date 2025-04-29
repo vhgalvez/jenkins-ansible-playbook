@@ -8,3 +8,8 @@ controller:
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
+
+  JCasC:
+    enabled: false  # 🚀 Desactiva Configuration as Code (esto soluciona tu error de InitContainer)
+
+  installPlugins: []  # 🚀 También evita que busque plugins al inicio si no tienes lista una lista de plugins
