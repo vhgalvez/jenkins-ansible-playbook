@@ -14,7 +14,7 @@
   tasks:
     - name: Copiar values.yaml.j2 a /tmp/values.yaml en el controlador
       ansible.builtin.copy:
-        src: ../roles/jenkins/templates/values.yaml.j2
+        src: roles/jenkins/templates/values.yaml.j2
         dest: /tmp/values.yaml
       delegate_to: localhost
 
