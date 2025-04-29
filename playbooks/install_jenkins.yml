@@ -1,4 +1,4 @@
-# playbooks\install_jenkins.yml
+# playbooks/install_jenkins.yml
 - name: Install Jenkins with Helm
   hosts: masters
   gather_facts: false
@@ -17,18 +17,18 @@
         scp -i /root/.ssh/cluster_k3s/shared/id_rsa_shared_cluster -o StrictHostKeyChecking=no /tmp/values.yaml core@{{ inventory_hostname }}:/home/core/values.yaml
       delegate_to: localhost
 
-    - name: Crear namespace si no existe
+    - name: Crear namespace si no existe (desde virtualizacion-server)
       ansible.builtin.shell: |
         kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
       delegate_to: localhost
 
-    - name: Añadir repositorio de Helm para Jenkins
+    - name: Añadir repositorio de Helm para Jenkins (desde virtualizacion-server)
       ansible.builtin.shell: |
         helm repo add jenkins https://charts.jenkins.io || true
         helm repo update
       delegate_to: localhost
 
-    - name: Instalar Jenkins usando Helm
+    - name: Instalar Jenkins usando Helm (desde virtualizacion-server)
       ansible.builtin.shell: |
         helm upgrade --install {{ jenkins_release_name }} jenkins/jenkins \
           --namespace {{ helm_namespace }} \
