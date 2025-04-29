@@ -1,0 +1,24 @@
+# playbooks/install_jenkins.yml
+
+- name: Deploy Jenkins desde el controlador
+  hosts: controller
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all.yml
+  tasks:
+    - name: Crear namespace si no existe
+      ansible.builtin.shell: |
+        kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
+
+    - name: Añadir repositorio de Helm para Jenkins
+      ansible.builtin.shell: |
+        helm repo add jenkins https://charts.jenkins.io || true
+        helm repo update
+
+    - name: Instalar Jenkins usando Helm
+      ansible.builtin.shell: |
+        helm upgrade --install {{ jenkins_release_name }} jenkins/jenkins \
+          --namespace {{ helm_namespace }} \
+          --create-namespace=false \
+          --values /home/core/values.yaml \
+          --version {{ jenkins_chart_version }}
