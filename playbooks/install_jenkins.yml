@@ -6,15 +6,10 @@
   serial: 1
   vars_files:
     - ../group_vars/all.yml
-  vars:
-    ansible_shell_executable: /bin/bash    # 🔥 Usa bash directamente
-    ansible_python_interpreter: /bin/false  # 🔥 NO uses Python (porque no hay)
-
-
   tasks:
-    - name: Copiar values.yaml.j2 a /tmp/values.yaml en el controlador
-      ansible.builtin.copy:
-        src: roles/jenkins/templates/values.yaml.j2
+    - name: Renderizar values.yaml.j2 en /tmp/values.yaml en el controlador
+      ansible.builtin.template:
+        src: ../roles/jenkins/templates/values.yaml.j2
         dest: /tmp/values.yaml
       delegate_to: localhost
 
@@ -23,27 +18,24 @@
         scp -i /root/.ssh/cluster_k3s/shared/id_rsa_shared_cluster -o StrictHostKeyChecking=no /tmp/values.yaml core@{{ inventory_hostname }}:/home/core/values.yaml
       delegate_to: localhost
 
-    - name: Crear namespace si no existe (directo en el master)
+    - name: Crear namespace si no existe (ejecutado en localhost, que sí tiene kubectl configurado)
       ansible.builtin.shell: |
         kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
-      args:
-        executable: /bin/bash
+      delegate_to: 192.168.0.15
 
-    - name: Añadir repositorio de Helm para Jenkins (directo en el master)
+    - name: Añadir repositorio de Helm para Jenkins
       ansible.builtin.shell: |
         helm repo add jenkins https://charts.jenkins.io || true
         helm repo update
-      args:
-        executable: /bin/bash
+      delegate_to: 192.168.0.15
 
-    - name: Instalar Jenkins usando Helm (directo en el master)
+    - name: Instalar Jenkins usando Helm
       ansible.builtin.shell: |
         helm upgrade --install {{ jenkins_release_name }} jenkins/jenkins \
           --namespace {{ helm_namespace }} \
           --create-namespace=false \
           --values /home/core/values.yaml \
           --version {{ jenkins_chart_version }}
-      args:
-        executable: /bin/bash
+      delegate_to: 192.168.0.15
 
-    - meta: end_play
+    - meta: end_play  # 🔥 Fin del playbook tras instalar en el primer nodo
