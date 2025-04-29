@@ -1,23 +1,23 @@
 # roles/jenkins/tasks/main.yml
 
 - name: Create namespace if not exists
-  kubernetes.core.k8s:
-    api_version: v1
-    kind: Namespace
-    name: "{{ helm_namespace }}"
-    state: present
+  shell: |
+    kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
+  delegate_to: localhost
 
 - name: Add Jenkins Helm repo
-  kubernetes.core.helm_repository:
-    name: jenkins
-    repo_url: https://charts.jenkins.io
+  shell: |
+    helm repo add jenkins https://charts.jenkins.io || true
+    helm repo update
+  delegate_to: localhost
 
 - name: Install Jenkins with Helm
-  kubernetes.core.helm:
-    name: "{{ jenkins_release_name }}"
-    chart_ref: jenkins/jenkins
-    release_namespace: "{{ helm_namespace }}"
-    create_namespace: false
-    values_files:
-      - "{{ jenkins_values_template }}"
-    version: "{{ jenkins_chart_version }}"
+  shell: |
+    helm upgrade --install {{ jenkins_release_name }} jenkins/jenkins \
+      --namespace {{ helm_namespace }} \
+      --create-namespace=false \
+      --values {{ jenkins_values_template }} \
+      --version {{ jenkins_chart_version }}
+  args:
+    chdir: "{{ playbook_dir }}/roles/jenkins/templates"  # donde está values.yaml.j2 generado
+  delegate_to: localhost
