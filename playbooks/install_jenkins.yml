@@ -5,6 +5,7 @@
   serial: 1
   vars_files:
     - ../group_vars/all.yml
+
   tasks:
     - name: Copiar values.yaml.j2 a /tmp/values.yaml en el controlador
       ansible.builtin.copy:
@@ -17,24 +18,27 @@
         scp -i /root/.ssh/cluster_k3s/shared/id_rsa_shared_cluster -o StrictHostKeyChecking=no /tmp/values.yaml core@{{ inventory_hostname }}:/home/core/values.yaml
       delegate_to: localhost
 
-    - name: Crear namespace si no existe (desde virtualizacion-server)
+    - name: Crear namespace si no existe (directo en el master)
       ansible.builtin.shell: |
         kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
-      delegate_to: localhost
+      args:
+        executable: /bin/bash
 
-    - name: Añadir repositorio de Helm para Jenkins (desde virtualizacion-server)
+    - name: Añadir repositorio de Helm para Jenkins (directo en el master)
       ansible.builtin.shell: |
         helm repo add jenkins https://charts.jenkins.io || true
         helm repo update
-      delegate_to: localhost
+      args:
+        executable: /bin/bash
 
-    - name: Instalar Jenkins usando Helm (desde virtualizacion-server)
+    - name: Instalar Jenkins usando Helm (directo en el master)
       ansible.builtin.shell: |
         helm upgrade --install {{ jenkins_release_name }} jenkins/jenkins \
           --namespace {{ helm_namespace }} \
           --create-namespace=false \
           --values /home/core/values.yaml \
           --version {{ jenkins_chart_version }}
-      delegate_to: localhost
+      args:
+        executable: /bin/bash
 
     - meta: end_play
