@@ -1,11 +1,40 @@
 # playbooks\install_jenkins.yml
 - name: Install Jenkins with Helm
   hosts: masters
-  become: yes
   gather_facts: false
-  vars:
-    ansible_python_interpreter: /bin/sh   # 🔥 Esto fuerza no usar Python
+  serial: 1              # <--- Solo un nodo a la vez
   vars_files:
     - ../group_vars/all.yml
-  roles:
-    - jenkins
+  tasks:
+    - name: Copiar values.yaml.j2 a /home/core/values.yaml
+      copy:
+        src: roles/jenkins/templates/values.yaml.j2
+        dest: /home/core/values.yaml
+      delegate_to: localhost
+
+    - name: Copiar values.yaml en el master
+      ansible.builtin.copy:
+        src: /home/core/values.yaml
+        dest: /home/core/values.yaml
+        owner: core
+        group: core
+        mode: '0644'
+
+    - name: Crear namespace si no existe
+      raw: |
+        kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
+
+    - name: Añadir repositorio de Helm para Jenkins
+      raw: |
+        helm repo add jenkins https://charts.jenkins.io || true
+        helm repo update
+
+    - name: Instalar Jenkins usando Helm
+      raw: |
+        helm upgrade --install {{ jenkins_release_name }} jenkins/jenkins \
+          --namespace {{ helm_namespace }} \
+          --create-namespace=false \
+          --values /home/core/values.yaml \
+          --version {{ jenkins_chart_version }}
+
+    - meta: end_play    # 🔥 Después de ejecutar en el primer nodo, terminamos
