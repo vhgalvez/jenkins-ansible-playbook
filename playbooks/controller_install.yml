@@ -9,6 +9,7 @@
     - ../group_vars/all.yml
   environment:
     PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+    KUBECONFIG: "/home/victory/.kube/config"
   tasks:
     - name: Crear namespace si no existe
       shell: |
