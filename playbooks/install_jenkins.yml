@@ -18,20 +18,23 @@
       delegate_to: localhost
 
     - name: Crear namespace si no existe
-      raw: |
+      ansible.builtin.shell: |
         kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
+      delegate_to: localhost
 
     - name: Añadir repositorio de Helm para Jenkins
-      raw: |
+      ansible.builtin.shell: |
         helm repo add jenkins https://charts.jenkins.io || true
         helm repo update
+      delegate_to: localhost
 
     - name: Instalar Jenkins usando Helm
-      raw: |
+      ansible.builtin.shell: |
         helm upgrade --install {{ jenkins_release_name }} jenkins/jenkins \
           --namespace {{ helm_namespace }} \
           --create-namespace=false \
           --values /home/core/values.yaml \
           --version {{ jenkins_chart_version }}
+      delegate_to: localhost
 
-    - meta: end_play # Fin del playbook
+    - meta: end_play
