@@ -1,19 +1,27 @@
-# playbooks/install_jenkins.yml
+---
+# 🧩 playbooks/controller_install.yml
+# Despliegue de Jenkins en Kubernetes desde el controlador
 
 - name: Deploy Jenkins desde el controlador
   hosts: controller
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
+  environment:
+    KUBECONFIG: "/home/victory/.kube/config"   # 👈 AÑADIR ESTO
   tasks:
     - name: Crear namespace si no existe
       ansible.builtin.shell: |
         kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
+      args:
+        warn: false
 
     - name: Añadir repositorio de Helm para Jenkins
       ansible.builtin.shell: |
         helm repo add jenkins https://charts.jenkins.io || true
         helm repo update
+      args:
+        warn: false
 
     - name: Instalar Jenkins usando Helm
       ansible.builtin.shell: |
@@ -22,3 +30,5 @@
           --create-namespace=false \
           --values /home/core/values.yaml \
           --version {{ jenkins_chart_version }}
+      args:
+        warn: false
