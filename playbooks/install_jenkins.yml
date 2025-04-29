@@ -14,11 +14,13 @@
 
     - name: Copiar values.yaml en el master
       ansible.builtin.copy:
-        src: /tmp/values.yaml
-        dest: /tmp/values.yaml
+        src: /tmp/values.yaml    # <--- ⚡ muy importante cambiarlo
+        dest: /home/core/values.yaml
         owner: core
         group: core
         mode: '0644'
+        remote_src: no           # <--- ⚡ MUY IMPORTANTE para que se copie desde tu máquina (controlador) al nodo
+
 
 
     - name: Crear namespace si no existe
