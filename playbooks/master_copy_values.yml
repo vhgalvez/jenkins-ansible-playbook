@@ -11,7 +11,7 @@
   tasks:
     - name: Renderizar values.yaml.j2 en localhost
       ansible.builtin.template:
-        src: ../roles/jenkins/templates/values.yaml.j2
+        src: ../templates/jenkins/values.yaml.j2
         dest: /tmp/values.yaml
       delegate_to: localhost
 
