@@ -8,20 +8,16 @@
   vars_files:
     - ../group_vars/all.yml
   environment:
-    KUBECONFIG: "/home/victory/.kube/config"   # 👈 AÑADIR ESTO
+    KUBECONFIG: "/home/victory/.kube/config"   # ⬅️ Lo de KUBECONFIG sigue aquí
   tasks:
     - name: Crear namespace si no existe
       ansible.builtin.shell: |
         kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
-      args:
-        warn: false
 
     - name: Añadir repositorio de Helm para Jenkins
       ansible.builtin.shell: |
         helm repo add jenkins https://charts.jenkins.io || true
         helm repo update
-      args:
-        warn: false
 
     - name: Instalar Jenkins usando Helm
       ansible.builtin.shell: |
@@ -30,5 +26,3 @@
           --create-namespace=false \
           --values /home/core/values.yaml \
           --version {{ jenkins_chart_version }}
-      args:
-        warn: false
