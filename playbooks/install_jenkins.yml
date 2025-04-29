@@ -3,7 +3,9 @@
   hosts: masters
   become: yes
   gather_facts: false
+  vars:
+    ansible_python_interpreter: /bin/sh   # 🔥 Esto fuerza no usar Python
   vars_files:
-    - ../group_vars/all.yml   # <<-- 🔥 Cargamos manualmente las variables
+    - ../group_vars/all.yml
   roles:
     - jenkins
