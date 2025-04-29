@@ -1,18 +1,18 @@
----
+ ---
 # 🧩 playbooks/install_jenkins.yml
-# 🧩 Playbook maestro para instalar Jenkins en Kubernetes de forma modular.
+# Playbook maestro para instalar Jenkins
 
 - name: Cargar variables comunes
   hosts: controller
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
+  tasks:
+    - name: Verificar conexión
+      ping:
 
 - name: 1. Copiar values.yaml a los masters
   import_playbook: master_copy_values.yml
 
 - name: 2. Instalar Jenkins desde el controller
-  hosts: controller
-  gather_facts: false
-  roles:
-    - jenkins
+  import_playbook: controller_install.yml
