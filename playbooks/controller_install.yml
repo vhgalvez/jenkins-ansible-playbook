@@ -8,19 +8,19 @@
   vars_files:
     - ../group_vars/all.yml
   environment:
-    KUBECONFIG: "/home/victory/.kube/config"   # ⬅️ Lo de KUBECONFIG sigue aquí
+    PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
   tasks:
     - name: Crear namespace si no existe
-      ansible.builtin.shell: |
+      shell: |
         kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
 
     - name: Añadir repositorio de Helm para Jenkins
-      ansible.builtin.shell: |
+      shell: |
         helm repo add jenkins https://charts.jenkins.io || true
         helm repo update
 
     - name: Instalar Jenkins usando Helm
-      ansible.builtin.shell: |
+      shell: |
         helm upgrade --install {{ jenkins_release_name }} jenkins/jenkins \
           --namespace {{ helm_namespace }} \
           --create-namespace=false \
