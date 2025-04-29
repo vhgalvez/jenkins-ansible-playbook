@@ -14,11 +14,12 @@
 
     - name: Copiar values.yaml en el master
       ansible.builtin.copy:
-        src: /home/core/values.yaml
+        src: /tmp/values.yaml
         dest: /home/core/values.yaml
         owner: core
         group: core
         mode: '0644'
+
 
     - name: Crear namespace si no existe
       raw: |
