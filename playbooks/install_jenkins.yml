@@ -1,19 +1,39 @@
+# playbooks\install_jenkins.yml
 ---
-# 🧩 playbooks/install_jenkins.yml
-# Playbook maestro para instalar Jenkins de forma modular
+# 🧩 Despliegue de Jenkins en Kubernetes desde el controller
 
-- name: Cargar variables comunes
+- name: Instalar Jenkins en Kubernetes desde el controller
   hosts: controller
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml
+  environment:
+    PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+    KUBECONFIG: "/home/victory/.kube/config"
+
   tasks:
     - name: Confirmar carga de variables
       debug:
-        msg: "Variables cargadas correctamente."
+        msg: "✅ Variables cargadas correctamente."
 
-- name: 1. Copiar values.yaml a los masters
-  import_playbook: master_copy_values.yml
+    - name: Renderizar values.yaml.j2 en el controller
+      template:
+        src: ../templates/jenkins/values.yaml.j2
+        dest: /tmp/values.yaml
 
-- name: 2. Instalar Jenkins desde el controller
-  import_playbook: controller_install.yml
+    - name: Crear namespace si no existe
+      shell: |
+        kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
+
+    - name: Añadir repositorio de Helm para Jenkins
+      shell: |
+        helm repo add jenkins https://charts.jenkins.io || true
+        helm repo update
+
+    - name: Instalar Jenkins usando Helm
+      shell: |
+        helm upgrade --install {{ jenkins_release_name }} jenkins/jenkins \
+          --namespace {{ helm_namespace }} \
+          --create-namespace=false \
+          --values /tmp/values.yaml \
+          --version {{ jenkins_chart_version }}
