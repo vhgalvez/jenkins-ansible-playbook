@@ -43,6 +43,22 @@ Este repositorio instala Jenkins en un clúster Kubernetes usando Helm + Ansible
 - Personaliza las variables en `group_vars/all.yml` según tus necesidades específicas antes de ejecutar el playbook.
 
 
+
+[victory@virtualizacion-server ~]$ sudo pkill -f "kubectl port-forward"
+[victory@virtualizacion-server ~]$ kubectl -n jenkins get svc
+NAME            TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+jenkins         NodePort    10.43.39.91    <none>        8080:32000/TCP   14m
+jenkins-agent   ClusterIP   10.43.144.43   <none>        50000/TCP        14m
+[victory@virtualizacion-server ~]$ kubectl -n jenkins get svc jenkins -o wide
+NAME      TYPE       CLUSTER-IP    EXTERNAL-IP   PORT(S)          AGE   SELECTOR
+jenkins   NodePort   10.43.39.91   <none>        8080:32000/TCP   15m   app.kubernetes.io/component=jenkins-controller,app.kubernetes.io/instance=jenkins
+[victory@virtualizacion-server ~]$
+
+
+
+
+
+
 ```bash
 sudo pkill -f "kubectl port-forward"
 ```
