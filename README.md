@@ -47,19 +47,34 @@ Este repositorio instala Jenkins en un clúster Kubernetes usando Helm + Ansible
 sudo pkill -f "kubectl port-forward"
 
 # 🔁 Jenkins (expuesto en 32000 desde dentro del clúster al exterior)
+
+```bash
 nohup kubectl port-forward -n jenkins svc/jenkins --address 0.0.0.0 32000:8080 > /tmp/jenkins-port-forward.log 2>&1 &
+```
 
 # 📊 Prometheus (expuesto en 32001)
+
+```bash
 nohup kubectl port-forward -n monitoring svc/prometheus-server --address 0.0.0.0 32001:80 > /tmp/prometheus-port-forward.log 2>&1 &
+```
 
 # 📈 Grafana (expuesto en 32002)
+
+```bash
 nohup kubectl port-forward -n monitoring svc/grafana --address 0.0.0.0 32002:3000 > /tmp/grafana-port-forward.log 2>&1 &
+```
 
 # 🧠 Longhorn (expuesto en 32003) — nombre correcto: longhorn-frontend
+
+```bash
 nohup kubectl port-forward -n longhorn-system svc/longhorn-frontend --address 0.0.0.0 32003:80 > /tmp/longhorn-port-forward.log 2>&1 &
+```
 
-
+```bash
 kubectl get svc -A -o wide | grep -E 'jenkins|grafana|prometheus|longhorn'
+```
+
+
 
 | Servicio    | Tipo      | Puerto interno | NodePort  |
 |-------------|-----------|----------------|-----------|
@@ -69,7 +84,13 @@ kubectl get svc -A -o wide | grep -E 'jenkins|grafana|prometheus|longhorn'
 | Longhorn    | NodePort  | 80              | 32003     |
 
 
+
+```bash
 sudo ss -tuln | grep -E '32000|32001|32002|32003'
+```
+
+
+
 
 
 | Servicio    | URL de acceso                                |
@@ -82,17 +103,27 @@ sudo ss -tuln | grep -E '32000|32001|32002|32003'
 
 
 # 1. Matar port-forward anteriores
+
+```bash
 sudo pkill -f "kubectl port-forward"
+```
 
 # 2. Verificar servicios
+
+   
+```bash
 kubectl get svc -A -o wide | grep -E 'jenkins|grafana|prometheus|longhorn'
+```
 
 # 3. Crear todos los port-forwards
 
+   
+```bash
 nohup kubectl port-forward -n jenkins svc/jenkins --address 0.0.0.0 32000:8080 > /tmp/jenkins-port-forward.log 2>&1 &
 nohup kubectl port-forward -n monitoring svc/prometheus-server --address 0.0.0.0 32001:80 > /tmp/prometheus-port-forward.log 2>&1 &
 nohup kubectl port-forward -n monitoring svc/grafana --address 0.0.0.0 32002:3000 > /tmp/grafana-port-forward.log 2>&1 &
 nohup kubectl port-forward -n longhorn-system svc/longhorn-frontend --address 0.0.0.0 32003:80 > /tmp/longhorn-port-forward.log 2>&1 &
+```
 
 # 4. Comprobar puertos abiertos
 
