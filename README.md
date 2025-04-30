@@ -104,7 +104,7 @@ sudo ss -tuln | grep -E '32000|32001|32002|32003'
 ```bash
 sudo pkill -f "kubectl port-forward"
 ```
-sudo pgrep -a | grep "kubectl port-forward" 
+sudo grep "kubectl port-forward" 
 
 
 # 2. Verificar servicios
