@@ -143,6 +143,10 @@ nohup kubectl port-forward -n monitoring svc/grafana --address 0.0.0.0 32002:300
 
 nohup kubectl port-forward -n longhorn-system svc/longhorn-frontend --address 0.0.0.0 32003:80 > /tmp/longhorn-port-forward.log 2>&1 &
 
+nohup kubectl port-forward -n argocd svc/argocd-server --address 0.0.0.0 32004:80 > /tmp/argocd-port-forward.log 2>&1 &
+
+
+
 ```
 
 # 4. Comprobar puertos abiertos
