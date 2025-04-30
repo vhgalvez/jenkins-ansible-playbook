@@ -43,8 +43,9 @@ Este repositorio instala Jenkins en un clúster Kubernetes usando Helm + Ansible
 - Personaliza las variables en `group_vars/all.yml` según tus necesidades específicas antes de ejecutar el playbook.
 
 
-
+```bash
 sudo pkill -f "kubectl port-forward"
+```
 
 # 🔁 Jenkins (expuesto en 32000 desde dentro del clúster al exterior)
 
@@ -126,3 +127,9 @@ nohup kubectl port-forward -n longhorn-system svc/longhorn-frontend --address 0.
 ```bash
 sudo ss -tuln | grep -E '32000|32001|32002|32003'
 ```
+
+
+  for ip in 10.17.3.11 10.17.3.12 10.17.3.13 10.17.3.14 10.17.5.20 192.168.0.15; do
+    echo "Testing $ip:9100...";
+    timeout 2 curl -s http://$ip:9100/metrics | head -1 || echo "FAILED";
+  done
