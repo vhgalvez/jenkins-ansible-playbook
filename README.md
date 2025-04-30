@@ -89,10 +89,6 @@ kubectl get svc -A -o wide | grep -E 'jenkins|grafana|prometheus|longhorn'
 sudo ss -tuln | grep -E '32000|32001|32002|32003'
 ```
 
-
-
-
-
 | Servicio    | URL de acceso                                |
 |-------------|-----------------------------------------------|
 | Jenkins     | http://192.168.0.15:32000                     |
@@ -127,4 +123,6 @@ nohup kubectl port-forward -n longhorn-system svc/longhorn-frontend --address 0.
 
 # 4. Comprobar puertos abiertos
 
+```bash
 sudo ss -tuln | grep -E '32000|32001|32002|32003'
+```
