@@ -9,16 +9,19 @@ controller:
     paths:
       - path: /
         pathType: Prefix
+        backend:
+          serviceName: jenkins
+          servicePort: 8080
     tls:
       - hosts:
-          - "{{ jenkins_ingress_host }}"  # TLS opcional para https://jenkins.local
+          - "{{ jenkins_ingress_host }}"
 
-  jenkinsOpts: "--prefix=/"  # Importante para rutas en "/"
+  jenkinsOpts: "--prefix=/"
 
   JCasC:
-    enabled: false  # Desactivado si no estás usando Jenkins Configuration as Code
+    enabled: false
 
-  installPlugins: []  # Puedes rellenar esto luego con los plugins necesarios
+  installPlugins: []
 
   serviceType: NodePort
-  nodePort: 32000  # Para acceso directo si lo necesitas (ej. troubleshooting)
+  nodePort: 32000
