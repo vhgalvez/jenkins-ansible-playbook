@@ -6,24 +6,16 @@ controller:
     ingressClassName: traefik
     annotations:
       kubernetes.io/ingress.class: traefik
-    paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: jenkins
-            port:
-              number: 8080
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
 
-  jenkinsOpts: "--prefix=/"  # Importante para que Jenkins responda correctamente desde /
+  jenkinsOpts: "--prefix=/"  # Importante para evitar errores de ruta
 
   JCasC:
-    enabled: false  # Configuration as Code desactivado
+    enabled: false  # Puedes activar esto luego
 
-  installPlugins: []  # Puedes agregar plugins aquí
+  installPlugins: []  # Plugins opcionales
 
   serviceType: NodePort
-  nodePort: 32000  # Para debugging si falla el Ingress
+  nodePort: 32000
