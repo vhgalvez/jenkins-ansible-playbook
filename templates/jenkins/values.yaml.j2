@@ -18,12 +18,12 @@ controller:
       - hosts:
           - "{{ jenkins_ingress_host }}"
 
-  jenkinsOpts: "--prefix=/"  # Jenkins se sirve correctamente desde /
+  jenkinsOpts: "--prefix=/"  # Importante para que Jenkins funcione bien en /
 
   JCasC:
-    enabled: false
+    enabled: false  # Desactivado por defecto. Actívalo si usas Jenkins Configuration as Code.
 
-  installPlugins: []
+  installPlugins: []  # Puedes agregar plugins aquí, por ejemplo: ["kubernetes", "git", "workflow-aggregator"]
 
   serviceType: NodePort
-  nodePort: 32000
+  nodePort: 32000  # Puerto expuesto si necesitas debuggear sin Ingress
