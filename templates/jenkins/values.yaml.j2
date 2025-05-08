@@ -7,7 +7,8 @@ controller:
     annotations:
       kubernetes.io/ingress.class: traefik
     paths:
-      - /
+      - path: /
+        pathType: Prefix
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"  # TLS opcional para https://jenkins.local
@@ -20,4 +21,4 @@ controller:
   installPlugins: []  # Puedes rellenar esto luego con los plugins necesarios
 
   serviceType: NodePort
-  nodePort: 32000
+  nodePort: 32000  # Para acceso directo si lo necesitas (ej. troubleshooting)
