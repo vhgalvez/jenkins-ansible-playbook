@@ -2,7 +2,7 @@
 controller:
   ingress:
     enabled: true
-    hostName: "{{ jenkins_ingress_host }}"  # ej. jenkins.local
+    hostName: "{{ jenkins_ingress_host }}"
     ingressClassName: traefik
     annotations:
       kubernetes.io/ingress.class: traefik
@@ -10,8 +10,10 @@ controller:
       - path: /
         pathType: Prefix
         backend:
-          serviceName: jenkins
-          servicePort: 8080
+          service:
+            name: jenkins
+            port:
+              number: 8080
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
