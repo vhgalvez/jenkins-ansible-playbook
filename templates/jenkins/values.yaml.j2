@@ -1,5 +1,4 @@
 # roles/jenkins/templates/values.yaml.j2
-
 controller:
   ingress:
     enabled: true
@@ -14,13 +13,14 @@ controller:
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
+        secretName: jenkins-tls  # Asegúrate de crear este secreto si usas TLS
 
   jenkinsOpts: "--prefix=/"
 
   JCasC:
-    enabled: false
+    enabled: false  # Puedes activarlo si usas Jenkins Configuration as Code
 
-  installPlugins: []
+  installPlugins: []  # Ejemplo: ["kubernetes", "git", "workflow-aggregator"]
 
-  serviceType: NodePort
-  nodePort: 32000
+  serviceType: ClusterIP  # Usa NodePort solo si no tienes Ingress funcionando
+  nodePort: 32000  # Solo aplica si cambias serviceType a NodePort
