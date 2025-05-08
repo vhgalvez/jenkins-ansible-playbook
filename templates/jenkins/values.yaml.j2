@@ -8,19 +8,20 @@ controller:
       kubernetes.io/ingress.class: traefik
       traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
       traefik.ingress.kubernetes.io/router.tls: "true"
-    path: /
-    pathType: Prefix
+    paths:
+      - path: /
+        pathType: Prefix
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
-        secretName: jenkins-tls  # Asegúrate de crear este secreto si usas TLS
+        secretName: jenkins-tls  # Requiere un secreto TLS válido
 
-  jenkinsOpts: "--prefix=/"
+  jenkinsOpts: ""  # 🔥 Ojo: no pongas "--prefix=/" si Jenkins ya responde en "/"
 
   JCasC:
-    enabled: false  # Puedes activarlo si usas Jenkins Configuration as Code
+    enabled: false
 
   installPlugins: []  # Ejemplo: ["kubernetes", "git", "workflow-aggregator"]
 
-  serviceType: ClusterIP  # Usa NodePort solo si no tienes Ingress funcionando
-  nodePort: 32000  # Solo aplica si cambias serviceType a NodePort
+  serviceType: ClusterIP  # O NodePort si quieres exponerlo directamente
+  nodePort: 32000
