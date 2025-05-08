@@ -2,18 +2,22 @@
 controller:
   ingress:
     enabled: true
-    hostName: "{{ jenkins_ingress_host }}"
-    ingressClassName: traefik 
+    hostName: "{{ jenkins_ingress_host }}"  # ej. jenkins.local
+    ingressClassName: traefik
     annotations:
       kubernetes.io/ingress.class: traefik
+    paths:
+      - /
     tls:
       - hosts:
-          - "{{ jenkins_ingress_host }}"
+          - "{{ jenkins_ingress_host }}"  # TLS opcional para https://jenkins.local
+
+  jenkinsOpts: "--prefix=/"  # Importante para rutas en "/"
 
   JCasC:
-    enabled: false  # 🚀 Desactiva Configuration as Code
+    enabled: false  # Desactivado si no estás usando Jenkins Configuration as Code
 
-  installPlugins: []  # 🚀 Evita que busque plugins al inicio
+  installPlugins: []  # Puedes rellenar esto luego con los plugins necesarios
 
   serviceType: NodePort
   nodePort: 32000
