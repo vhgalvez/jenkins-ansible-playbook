@@ -1,4 +1,5 @@
 # roles\jenkins\templates\values.yaml.j2
+# roles/jenkins/templates/values.yaml.j2
 controller:
   ingress:
     enabled: true
@@ -6,16 +7,24 @@ controller:
     ingressClassName: traefik
     annotations:
       kubernetes.io/ingress.class: traefik
+    paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jenkins
+            port:
+              number: 8080
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
 
-  jenkinsOpts: "--prefix=/"
+  jenkinsOpts: "--prefix=/"  # Importante para evitar errores de ruta con Ingress
 
   JCasC:
-    enabled: false
+    enabled: false  # Puedes habilitar esto si usas Jenkins Configuration as Code
 
-  installPlugins: []
+  installPlugins: []  # Agrega plugins aquí si lo deseas (ej. kubernetes, git, pipeline)
 
   serviceType: NodePort
-  nodePort: 32000
+  nodePort: 32000  # Útil para acceso directo si falla el Ingress
