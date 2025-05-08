@@ -1,4 +1,5 @@
 # roles/jenkins/templates/values.yaml.j2
+
 controller:
   ingress:
     enabled: true
@@ -8,14 +9,8 @@ controller:
       kubernetes.io/ingress.class: traefik
       traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
       traefik.ingress.kubernetes.io/router.tls: "true"
-    paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: jenkins
-            port:
-              number: 8080
+    path: /
+    pathType: Prefix
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
