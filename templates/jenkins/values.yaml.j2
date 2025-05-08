@@ -6,6 +6,8 @@ controller:
     ingressClassName: traefik
     annotations:
       kubernetes.io/ingress.class: traefik
+      traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+      traefik.ingress.kubernetes.io/router.tls: "true"
     paths:
       - path: /
         pathType: Prefix
@@ -18,12 +20,12 @@ controller:
       - hosts:
           - "{{ jenkins_ingress_host }}"
 
-  jenkinsOpts: "--prefix=/"  # Importante para que Jenkins funcione bien en /
+  jenkinsOpts: "--prefix=/"
 
   JCasC:
-    enabled: false  # Desactivado por defecto. Actívalo si usas Jenkins Configuration as Code.
+    enabled: false
 
-  installPlugins: []  # Puedes agregar plugins aquí, por ejemplo: ["kubernetes", "git", "workflow-aggregator"]
+  installPlugins: []
 
   serviceType: NodePort
-  nodePort: 32000  # Puerto expuesto si necesitas debuggear sin Ingress
+  nodePort: 32000
