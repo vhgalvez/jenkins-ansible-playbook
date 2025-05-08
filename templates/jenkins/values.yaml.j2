@@ -9,9 +9,13 @@ controller:
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
+
   jenkinsOpts: "--prefix=/"
+
   JCasC:
     enabled: false
+
   installPlugins: []
+
   serviceType: NodePort
   nodePort: 32000
