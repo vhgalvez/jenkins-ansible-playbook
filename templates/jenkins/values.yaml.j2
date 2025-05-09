@@ -1,13 +1,10 @@
 # templates/jenkins/values.yaml.j2
-# templates/jenkins/values.yaml.j2
 
 controller:
-  # Configuración del servicio de Jenkins
   serviceType: ClusterIP
   servicePort: 8080
   jenkinsOpts: "--prefix=/"  # Necesario para que Jenkins sirva en "/"
 
-  # Configuración del Ingress con Traefik y autenticación básica
   ingress:
     enabled: true
     ingressClassName: traefik
@@ -24,11 +21,9 @@ controller:
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
-        # secretName: jenkins-tls  # Descomenta si usas un certificado personalizado
+        # secretName: jenkins-tls  # Descomentar si usas tu propio certificado TLS
 
-  # Jenkins Configuration as Code (opcional)
   JCasC:
     enabled: false
 
-  # Lista de plugins a instalar
-  installPlugins: []  # Ejemplo: ["kubernetes", "git", "workflow-aggregator"]
+  installPlugins: []  # Puedes agregar plugins aquí
