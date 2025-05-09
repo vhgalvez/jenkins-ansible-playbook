@@ -9,20 +9,14 @@ controller:
       traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
       traefik.ingress.kubernetes.io/router.tls: "true"
       traefik.ingress.kubernetes.io/redirect-entry-point: websecure
-    paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: jenkins
-            port:
-              number: 8080
+    path: /
+    pathType: Prefix
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
-        # secretName: jenkins-tls  # O coméntalo si no tienes certificado
+        # secretName: jenkins-tls  # coméntalo si no usas certificado
 
-  jenkinsOpts: ""  # No uses "--prefix=/" salvo que montes Jenkins en un subpath
+  jenkinsOpts: ""  # No uses --prefix=/
 
   JCasC:
     enabled: false
