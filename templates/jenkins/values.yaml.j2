@@ -17,6 +17,8 @@ controller:
           - "{{ jenkins_ingress_host }}"
         secretName: jenkins-tls  # Puedes omitir si no usas TLS
 
+  servicePort: 8080  # <--- ✅ NECESARIO para crear backend del Ingress
+
   jenkinsOpts: ""  # NO uses "--prefix=/", Jenkins ya lo hace
 
   JCasC:
