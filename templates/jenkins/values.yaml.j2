@@ -18,11 +18,6 @@ controller:
     paths:
       - path: /
         pathType: Prefix
-        backend:
-          service:
-            name: jenkins
-            port:
-              number: 8080
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
@@ -31,4 +26,4 @@ controller:
   JCasC:
     enabled: false
 
-  installPlugins: []  # Puedes agregar plugins aquí, por ejemplo: ["kubernetes", "git", "workflow-aggregator"]
+  installPlugins: []
