@@ -6,11 +6,8 @@ controller:
 
   ingress:
     enabled: true
-    apiVersion: networking.k8s.io/v1
     ingressClassName: traefik
     hostName: "{{ jenkins_ingress_host }}"
-    path: /
-    pathType: Prefix
     annotations:
       kubernetes.io/ingress.class: traefik
       traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
@@ -18,12 +15,20 @@ controller:
       traefik.ingress.kubernetes.io/redirect-entry-point: websecure
       traefik.ingress.kubernetes.io/auth-type: basic
       traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret
+    paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Release.Name }}-jenkins
+            port:
+              number: 8080
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
-        # secretName: jenkins-tls  # si usas TLS personalizado
+        # secretName: jenkins-tls  # Descomenta si utilizas un certificado TLS personalizado
 
   JCasC:
     enabled: false
 
-  installPlugins: []  # ["kubernetes", "git", "workflow-aggregator"] por ejemplo
+  installPlugins: []  # Puedes agregar plugins aquí, por ejemplo: ["kubernetes", "git", "workflow-aggregator"]
