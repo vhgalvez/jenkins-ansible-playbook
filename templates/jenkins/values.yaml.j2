@@ -1,29 +1,30 @@
 # roles/jenkins/templates/values.yaml.j2
 controller:
-  ingress:
-    enabled: true
-    ingressClassName: traefik
-    annotations:
-      kubernetes.io/ingress.class: traefik
-      traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
-      traefik.ingress.kubernetes.io/router.tls: "true"
-    hosts:
-      - host: "{{ jenkins_ingress_host }}"
-        paths:
-          - path: /
-            pathType: Prefix
-    tls:
-      - hosts:
-          - "{{ jenkins_ingress_host }}"
-        secretName: jenkins-tls  # Puedes omitir si no usas TLS
-
-  servicePort: 8080  # <--- ✅ NECESARIO para crear backend del Ingress
-
-  jenkinsOpts: ""  # NO uses "--prefix=/", Jenkins ya lo hace
-
+  serviceType: ClusterIP
+  servicePort: 8080
+  jenkinsOpts: ""
   JCasC:
     enabled: false
-
   installPlugins: []
 
-  serviceType: ClusterIP
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+  hosts:
+    - host: "{{ jenkins_ingress_host }}"
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: jenkins
+              port:
+                number: 8080
+  tls:
+    - hosts:
+        - "{{ jenkins_ingress_host }}"
+      secretName: jenkins-tls
