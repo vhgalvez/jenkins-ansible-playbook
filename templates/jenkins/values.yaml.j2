@@ -2,7 +2,8 @@
 controller:
   serviceType: ClusterIP
   servicePort: 8080
-  jenkinsUriPrefix: /  # ✅ Este es el correcto para que funcione el Ingress en /
+  jenkinsUriPrefix: /
+  jenkinsOpts: "--prefix=/"  # ✅ también agrega esto
 
   ingress:
     enabled: true
