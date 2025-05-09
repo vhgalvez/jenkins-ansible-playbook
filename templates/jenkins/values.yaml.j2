@@ -1,9 +1,12 @@
 # roles/jenkins/templates/values.yaml.j2
-controller:
-  serviceType: ClusterIP
-  servicePort: 8080  # ✅ Necesario para que el Ingress funcione
-  jenkinsOpts: "--prefix=/"  # ✅ Fuerza a Jenkins a servir en /
 
+controller:
+  # Configuración del servicio de Jenkins
+  serviceType: ClusterIP
+  servicePort: 8080
+  jenkinsOpts: "--prefix=/"  # ✅ Fuerza a Jenkins a servir en la raíz "/"
+
+  # Configuración del Ingress
   ingress:
     enabled: true
     hostName: "{{ jenkins_ingress_host }}"
@@ -18,9 +21,14 @@ controller:
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
-        # secretName: jenkins-tls  # coméntalo si no usas certificado
+        # secretName: jenkins-tls  # Si no usas certificado personalizado, coméntalo
 
+  # Otras configuraciones opcionales
+  jenkinsOpts: ""  # No uses --prefix=/ si no lo necesitas (lo hemos forzado arriba)
+
+  # Jenkins Configuration as Code (JCasC) - Deshabilitado por defecto
   JCasC:
     enabled: false
 
+  # Lista de plugins a instalar en Jenkins
   installPlugins: []
