@@ -36,7 +36,7 @@
             namespace: "{{ helm_namespace }}"
           type: Opaque
           data:
-            auth-basic: "{{ lookup('file', '../files/htpasswd.txt') | b64encode }}"
+            auth-basic: "{{ lookup('file', 'playbooks/files/htpasswd.txt') | b64encode }}"
 
     - name: Añadir repositorio de Helm para Jenkins
       shell: |
