@@ -20,9 +20,9 @@ controller:
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
-        # secretName: jenkins-tls  # Descomentar si usas TLS personalizado
+        # secretName: jenkins-tls  # O coméntalo si no tienes certificado
 
-  jenkinsOpts: ""
+  jenkinsOpts: ""  # No uses "--prefix=/" salvo que montes Jenkins en un subpath
 
   JCasC:
     enabled: false
