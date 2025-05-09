@@ -8,6 +8,7 @@ controller:
       kubernetes.io/ingress.class: traefik
       traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
       traefik.ingress.kubernetes.io/router.tls: "true"
+      traefik.ingress.kubernetes.io/redirect-entry-point: websecure
     paths:
       - path: /
         pathType: Prefix
@@ -19,13 +20,13 @@ controller:
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
-        # secretName: jenkins-tls  # Descomenta si tienes un certificado TLS personalizado
+        # secretName: jenkins-tls  # Descomentar si usas TLS personalizado
 
-  jenkinsOpts: ""  # No uses "--prefix=/" a menos que Jenkins esté en un subpath como /jenkins
+  jenkinsOpts: ""
 
   JCasC:
     enabled: false
 
-  installPlugins: []  # Ejemplo: ["kubernetes", "git", "workflow-aggregator"]
+  installPlugins: []
 
-  serviceType: ClusterIP  # Ideal si usas Ingress correctamente configurado
+  serviceType: ClusterIP
