@@ -2,6 +2,7 @@
 controller:
   serviceType: ClusterIP
   servicePort: 8080  # ✅ Necesario para que el Ingress funcione
+  jenkinsOpts: "--prefix=/"  # ✅ Fuerza a Jenkins a servir en /
 
   ingress:
     enabled: true
@@ -18,8 +19,6 @@ controller:
       - hosts:
           - "{{ jenkins_ingress_host }}"
         # secretName: jenkins-tls  # coméntalo si no usas certificado
-
-  jenkinsOpts: ""  # No uses --prefix=/
 
   JCasC:
     enabled: false
