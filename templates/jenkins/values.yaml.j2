@@ -15,9 +15,9 @@ controller:
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
-        secretName: jenkins-tls  # Puedes omitirlo si no usas TLS
+        secretName: jenkins-tls  # Puedes omitir si no usas TLS
 
-  jenkinsOpts: ""  # NO uses "--prefix=/", ya que Jenkins ya usa "/"
+  jenkinsOpts: ""  # NO uses "--prefix=/", Jenkins ya lo hace
 
   JCasC:
     enabled: false
@@ -25,4 +25,3 @@ controller:
   installPlugins: []
 
   serviceType: ClusterIP
-  nodePort: 32000
