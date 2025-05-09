@@ -10,6 +10,11 @@ controller:
       traefik.ingress.kubernetes.io/router.tls: "true"
     path: /
     pathType: Prefix
+    backend:
+      service:
+        name: jenkins
+        port:
+          number: 8080
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
