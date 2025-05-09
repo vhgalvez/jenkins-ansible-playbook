@@ -22,22 +22,28 @@ controller:
   healthProbes:
     livenessProbe:
       httpGet:
-        path: /
-        port: http
-      initialDelaySeconds: 30
+        path: /login
+        port: 8080
+      initialDelaySeconds: 60
       periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 12
     readinessProbe:
       httpGet:
-        path: /
-        port: http
-      initialDelaySeconds: 30
+        path: /login
+        port: 8080
+      initialDelaySeconds: 60
       periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 12
     startupProbe:
       httpGet:
-        path: /
-        port: http
+        path: /login
+        port: 8080
       failureThreshold: 30
       periodSeconds: 10
+      timeoutSeconds: 5
+      initialDelaySeconds: 20
 
   JCasC:
     enabled: false
