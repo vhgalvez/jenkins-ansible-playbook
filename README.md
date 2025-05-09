@@ -160,3 +160,6 @@ sudo ss -tuln | grep -E '32000|32001|32002|32003'
     echo "Testing $ip:9100...";
     timeout 2 curl -s http://$ip:9100/metrics | head -1 || echo "FAILED";
   done
+
+
+curl -Ik https://jenkins.local --insecure -u admin:123456
