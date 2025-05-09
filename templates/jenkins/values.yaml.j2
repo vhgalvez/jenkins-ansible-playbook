@@ -2,15 +2,16 @@
 controller:
   ingress:
     enabled: true
-    hostName: "{{ jenkins_ingress_host }}"
     ingressClassName: traefik
     annotations:
       kubernetes.io/ingress.class: traefik
       traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
       traefik.ingress.kubernetes.io/router.tls: "true"
-    paths:
-      - path: /
-        pathType: Prefix
+    hosts:
+      - host: "{{ jenkins_ingress_host }}"
+        paths:
+          - path: /
+            pathType: Prefix
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
