@@ -1,11 +1,8 @@
 # templates/jenkins/values.yaml.j2
-
-# templates/jenkins/values.yaml.j2
-
 controller:
   serviceType: ClusterIP
   servicePort: 8080
-  jenkinsUriPrefix: /  # ✅ Reemplaza jenkinsOpts, esta opción es compatible con el chart
+  jenkinsOpts: ""
 
   ingress:
     enabled: true
@@ -18,14 +15,11 @@ controller:
       traefik.ingress.kubernetes.io/redirect-entry-point: websecure
       traefik.ingress.kubernetes.io/auth-type: basic
       traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret
-    path: /
-    pathType: Prefix
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
-        # secretName: jenkins-tls  # Descomentar si usas tu propio certificado TLS
 
   JCasC:
     enabled: false
 
-  installPlugins: []  # Puedes agregar plugins aquí, ejemplo: ["kubernetes", "git", "workflow-aggregator"]
+  installPlugins: []  # Ejemplo: ["kubernetes", "git", "workflow-aggregator"]
