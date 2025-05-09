@@ -1,5 +1,4 @@
 # templates/jenkins/values.yaml.j2
-
 controller:
   serviceType: ClusterIP
   servicePort: 8080
@@ -7,8 +6,11 @@ controller:
 
   ingress:
     enabled: true
-    hostName: "{{ jenkins_ingress_host }}"
+    apiVersion: networking.k8s.io/v1
     ingressClassName: traefik
+    hostName: "{{ jenkins_ingress_host }}"
+    path: /
+    pathType: Prefix
     annotations:
       kubernetes.io/ingress.class: traefik
       traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
@@ -16,10 +18,12 @@ controller:
       traefik.ingress.kubernetes.io/redirect-entry-point: websecure
       traefik.ingress.kubernetes.io/auth-type: basic
       traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret
-    path: /
-    pathType: Prefix
+    tls:
+      - hosts:
+          - "{{ jenkins_ingress_host }}"
+        # secretName: jenkins-tls  # si usas TLS personalizado
 
   JCasC:
     enabled: false
 
-  installPlugins: []  # Puedes agregar plugins aquí, ejemplo: ["kubernetes", "git", "workflow-aggregator"]
+  installPlugins: []  # ["kubernetes", "git", "workflow-aggregator"] por ejemplo
