@@ -15,9 +15,18 @@ controller:
       traefik.ingress.kubernetes.io/redirect-entry-point: websecure
       traefik.ingress.kubernetes.io/auth-type: basic
       traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret
+    paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jenkins
+            port:
+              number: 8080
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
+        # secretName: jenkins-tls  # Si usas un certificado TLS personalizado
 
   healthProbes:
     livenessProbe:
@@ -42,4 +51,4 @@ controller:
   JCasC:
     enabled: false
 
-  installPlugins: []  # Puedes añadir plugins como ["kubernetes", "git", "workflow-aggregator"]
+  installPlugins: []  # Ejemplo: ["kubernetes", "git", "workflow-aggregator"]
