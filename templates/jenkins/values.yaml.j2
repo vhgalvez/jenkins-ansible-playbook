@@ -26,26 +26,20 @@ controller:
         port: 8080
       initialDelaySeconds: 60
       periodSeconds: 10
-      timeoutSeconds: 5
-      failureThreshold: 12
     readinessProbe:
       httpGet:
         path: /login
         port: 8080
       initialDelaySeconds: 60
       periodSeconds: 10
-      timeoutSeconds: 5
-      failureThreshold: 12
     startupProbe:
       httpGet:
         path: /login
         port: 8080
       failureThreshold: 30
       periodSeconds: 10
-      timeoutSeconds: 5
-      initialDelaySeconds: 20
 
   JCasC:
     enabled: false
 
-  installPlugins: []  # Ejemplo: ["kubernetes", "git", "workflow-aggregator"]
+  installPlugins: []  # Puedes añadir plugins como ["kubernetes", "git", "workflow-aggregator"]
