@@ -20,7 +20,7 @@ controller:
         pathType: Prefix
         backend:
           service:
-            name: {{ .Release.Name }}-jenkins
+            name: jenkins
             port:
               number: 8080
     tls:
