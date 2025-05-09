@@ -1,8 +1,9 @@
-# templates\jenkins\values.yaml.j2
+# templates/jenkins/values.yaml.j2
+
 controller:
   serviceType: ClusterIP
   servicePort: 8080
-  jenkinsOpts: ""  # DEBE estar vacío
+  jenkinsOpts: "--prefix=/"
 
   ingress:
     enabled: true
@@ -13,17 +14,12 @@ controller:
       traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
       traefik.ingress.kubernetes.io/router.tls: "true"
       traefik.ingress.kubernetes.io/redirect-entry-point: websecure
-      traefik.ingress.kubernetes.io/auth.basic.secret: "jenkins-auth-secret"
-    paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: jenkins
-            port:
-              number: 8080
+      traefik.ingress.kubernetes.io/auth-type: basic
+      traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret
+    path: /
+    pathType: Prefix
 
   JCasC:
     enabled: false
 
-  installPlugins: []
+  installPlugins: []  # Puedes agregar plugins aquí, ejemplo: ["kubernetes", "git", "workflow-aggregator"]
