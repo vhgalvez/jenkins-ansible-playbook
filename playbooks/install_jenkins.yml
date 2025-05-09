@@ -1,5 +1,5 @@
 # playbooks\install_jenkins.yml
----
+---  
 # 🧩 Despliegue de Jenkins en Kubernetes desde el controller
 
 - name: Instalar Jenkins en Kubernetes desde el controller
@@ -24,6 +24,19 @@
     - name: Crear namespace si no existe
       shell: |
         kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
+
+    - name: Crear secreto de autenticación básica si no existe
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: jenkins-auth-secret
+            namespace: "{{ helm_namespace }}"
+          type: Opaque
+          data:
+            auth-basic: "{{ lookup('file', '../files/htpasswd.txt') | b64encode }}"
 
     - name: Añadir repositorio de Helm para Jenkins
       shell: |

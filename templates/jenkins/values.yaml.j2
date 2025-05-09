@@ -16,15 +16,17 @@ controller:
       traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
       traefik.ingress.kubernetes.io/router.tls: "true"
       traefik.ingress.kubernetes.io/redirect-entry-point: websecure
+      # Autenticación básica para acceder a Jenkins
+      traefik.ingress.kubernetes.io/auth.basic: "true"
+      traefik.ingress.kubernetes.io/auth.basic.secret: "jenkins-auth-secret"
+
+
     path: /
     pathType: Prefix
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
         # secretName: jenkins-tls  # Si no usas certificado personalizado, coméntalo
-
-  # Otras configuraciones opcionales
-  jenkinsOpts: ""  # No uses --prefix=/ si no lo necesitas (lo hemos forzado arriba)
 
   # Jenkins Configuration as Code (JCasC) - Deshabilitado por defecto
   JCasC:
