@@ -1,9 +1,11 @@
 # templates/jenkins/values.yaml.j2
 
+# templates/jenkins/values.yaml.j2
+
 controller:
   serviceType: ClusterIP
   servicePort: 8080
-  jenkinsOpts: "--prefix=/"  # Necesario para que Jenkins sirva en "/"
+  jenkinsUriPrefix: /  # ✅ Reemplaza jenkinsOpts, esta opción es compatible con el chart
 
   ingress:
     enabled: true
@@ -26,4 +28,4 @@ controller:
   JCasC:
     enabled: false
 
-  installPlugins: []  # Puedes agregar plugins aquí
+  installPlugins: []  # Puedes agregar plugins aquí, ejemplo: ["kubernetes", "git", "workflow-aggregator"]
