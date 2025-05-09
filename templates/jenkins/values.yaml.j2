@@ -1,12 +1,10 @@
 # roles/jenkins/templates/values.yaml.j2
 
 controller:
-  # Configuración del servicio de Jenkins
   serviceType: ClusterIP
   servicePort: 8080
-  jenkinsOpts: "--prefix=/"  # ✅ Fuerza a Jenkins a servir en la raíz "/"
+  jenkinsOpts: "--prefix=/"
 
-  # Configuración del Ingress
   ingress:
     enabled: true
     hostName: "{{ jenkins_ingress_host }}"
@@ -16,21 +14,19 @@ controller:
       traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
       traefik.ingress.kubernetes.io/router.tls: "true"
       traefik.ingress.kubernetes.io/redirect-entry-point: websecure
-      # Autenticación básica para acceder a Jenkins
       traefik.ingress.kubernetes.io/auth.basic: "true"
       traefik.ingress.kubernetes.io/auth.basic.secret: "jenkins-auth-secret"
 
+    paths:
+      - path: /
+        pathType: Prefix
 
-    path: /
-    pathType: Prefix
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
-        # secretName: jenkins-tls  # Si no usas certificado personalizado, coméntalo
+        # secretName: jenkins-tls
 
-  # Jenkins Configuration as Code (JCasC) - Deshabilitado por defecto
   JCasC:
     enabled: false
 
-  # Lista de plugins a instalar en Jenkins
   installPlugins: []
