@@ -1,3 +1,4 @@
+# playbooks\uninstall_jenkins.yml
 ---
 # 🧹 Desinstalar Jenkins de Kubernetes usando Ansible
 
@@ -13,16 +14,39 @@
   tasks:
     - name: 🚀 Iniciando desinstalación de Jenkins...
       debug:
-        msg: "Desinstalación iniciada"
+        msg: "Desinstalación iniciada para la release de Jenkins '{{ jenkins_release_name }}' en el namespace '{{ helm_namespace }}'."
 
     - name: 🧹 Desinstalando Helm release de Jenkins
-      shell: helm uninstall {{ jenkins_release_name }} -n {{ helm_namespace }} || true
+      shell: helm uninstall {{ jenkins_release_name }} -n {{ helm_namespace }}
+      register: helm_uninstall_output
       ignore_errors: true
+
+    - name: Mostrar salida de Helm uninstall
+      debug:
+        msg: "{{ helm_uninstall_output.stdout }}"
+      when: helm_uninstall_output.rc == 0
 
     - name: 🧨 Eliminando namespace de Jenkins (si existe)
-      shell: kubectl delete namespace {{ helm_namespace }} || true
+      shell: kubectl delete namespace {{ helm_namespace }}
+      register: delete_namespace_output
       ignore_errors: true
 
-    - name: ✅ Confirmación final
+    - name: Mostrar salida de eliminación de namespace
+      debug:
+        msg: "{{ delete_namespace_output.stdout }}"
+      when: delete_namespace_output.rc == 0
+
+    - name: ❌ Verificando si el namespace Jenkins ya está eliminado
+      shell: kubectl get namespace {{ helm_namespace }} || true
+      register: check_namespace_exists
+      changed_when: false
+
+    - name: Confirmación final de eliminación de Jenkins
       debug:
         msg: "Jenkins y el namespace '{{ helm_namespace }}' han sido eliminados correctamente."
+      when: check_namespace_exists.stdout == ""
+
+    - name: Error en la desinstalación si el namespace persiste
+      debug:
+        msg: "Hubo un error al eliminar el namespace '{{ helm_namespace }}'. Verifica la configuración y los permisos."
+      when: check_namespace_exists.stdout != ""
