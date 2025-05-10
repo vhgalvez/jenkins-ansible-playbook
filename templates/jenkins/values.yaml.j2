@@ -9,13 +9,13 @@ controller:
     ingressClassName: traefik
     hostName: "jenkins.local"
     annotations:
-      traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure  # Solo HTTPS
       traefik.ingress.kubernetes.io/router.tls: "true"
       traefik.ingress.kubernetes.io/auth-type: basic
       traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret
     paths:
       - path: /
-        pathType: Exact  # Cambié a Exact para evitar conflictos con el enrutamiento
+        pathType: Prefix  # ✅ Permite subrutas como /login, /static, etc.
         backend:
           service:
             name: jenkins
@@ -24,7 +24,7 @@ controller:
     tls:
       - hosts:
           - "jenkins.local"
-        # secretName: jenkins-tls  # Si tienes certificado personalizado, descomenta esta línea
+        secretName: jenkins-tls  # Crea este Secret si usas certificado personalizado
 
   healthProbes:
     livenessProbe:
