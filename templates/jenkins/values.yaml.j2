@@ -24,28 +24,30 @@ controller:
     tls:
       - hosts:
           - "jenkins.local"
-        # Elimina 'secretName' para usar el certificado TLS gestionado por Traefik
         certResolver: default  # Usar el resolver ACME de Traefik para TLS
 
   healthProbes:
     livenessProbe:
       httpGet:
-        path: /login
+        path: /login  # Endpoint de Jenkins para comprobar la disponibilidad
         port: 8080
-      initialDelaySeconds: 60
-      periodSeconds: 10
+      initialDelaySeconds: 60  # Espera 60 segundos antes de empezar a verificar
+      periodSeconds: 10  # Verifica cada 10 segundos
+      failureThreshold: 3  # Si falla 3 veces, marca el pod como no saludable
     readinessProbe:
       httpGet:
-        path: /login
+        path: /login  # Endpoint de Jenkins para comprobar si está listo
         port: 8080
-      initialDelaySeconds: 60
-      periodSeconds: 10
+      initialDelaySeconds: 60  # Espera 60 segundos antes de empezar a verificar
+      periodSeconds: 10  # Verifica cada 10 segundos
+      failureThreshold: 3  # Si falla 3 veces, marca el pod como no listo
     startupProbe:
       httpGet:
-        path: /login
+        path: /login  # Endpoint de Jenkins para comprobar si está listo para iniciar
         port: 8080
-      failureThreshold: 30
-      periodSeconds: 10
+      failureThreshold: 30  # Si falla 30 veces, marcar como no saludable
+      periodSeconds: 10  # Verifica cada 10 segundos
+      initialDelaySeconds: 60  # Espera 60 segundos antes de la primera comprobación
 
   JCasC:
     enabled: false  # Desactivado si no usas configuración en código de Jenkins
