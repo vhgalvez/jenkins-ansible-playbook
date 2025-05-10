@@ -10,9 +10,9 @@ controller:
     hostName: "jenkins.local"
     annotations:
       traefik.ingress.kubernetes.io/router.entrypoints: websecure  # Solo HTTPS
-      traefik.ingress.kubernetes.io/router.tls: "true"
+      traefik.ingress.kubernetes.io/router.tls: "true"  # Habilitar TLS para HTTPS
       traefik.ingress.kubernetes.io/auth-type: basic  # Autenticación básica
-      traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret  # Secreto para autenticación
+      traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret  # Secreto para autenticación básica
     paths:
       - path: /
         pathType: Prefix  # ✅ Permite subrutas como /login, /static, etc.
@@ -25,6 +25,7 @@ controller:
       - hosts:
           - "jenkins.local"
         # Elimina 'secretName' para usar el certificado TLS gestionado por Traefik
+        certResolver: default  # Usar el resolver ACME de Traefik para TLS
 
   healthProbes:
     livenessProbe:
@@ -47,6 +48,6 @@ controller:
       periodSeconds: 10
 
   JCasC:
-    enabled: false
+    enabled: false  # Desactivado si no usas configuración en código de Jenkins
 
-  installPlugins: []  # Ejemplo: ["kubernetes", "git", "workflow-aggregator"]
+  installPlugins: []  # Puedes agregar plugins de Jenkins aquí si es necesario
