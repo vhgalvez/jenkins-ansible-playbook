@@ -2,17 +2,15 @@
 controller:
   serviceType: ClusterIP
   servicePort: 8080
-  jenkinsOpts: "--prefix=/"
+  jenkinsOpts: ""  # No usar --prefix=/ para evitar 404
 
   ingress:
     enabled: true
     ingressClassName: traefik
-    hostName: "jenkins.local"  # Nombre correcto de host
+    hostName: "jenkins.local"
     annotations:
-      kubernetes.io/ingress.class: traefik
       traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
       traefik.ingress.kubernetes.io/router.tls: "true"
-      traefik.ingress.kubernetes.io/redirect-entry-point: websecure
       traefik.ingress.kubernetes.io/auth-type: basic
       traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret
     paths:
@@ -26,7 +24,7 @@ controller:
     tls:
       - hosts:
           - "jenkins.local"
-        # secretName: jenkins-tls  # Si usas tu propio certificado TLS, descomenta esta línea
+        # secretName: jenkins-tls  # Descomenta si tienes un certificado personalizado
 
   healthProbes:
     livenessProbe:
