@@ -11,10 +11,10 @@ controller:
     annotations:
       traefik.ingress.kubernetes.io/router.entrypoints: websecure  # Solo HTTPS
       traefik.ingress.kubernetes.io/router.tls: "true"
-      traefik.ingress.kubernetes.io/auth-type: basic
-      traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret
+      traefik.ingress.kubernetes.io/auth-type: basic  # Autenticación básica
+      traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret  # Secreto para autenticación
     paths:
-      - path: / 
+      - path: /
         pathType: Prefix  # ✅ Permite subrutas como /login, /static, etc.
         backend:
           service:
