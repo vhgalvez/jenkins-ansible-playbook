@@ -9,12 +9,12 @@ controller:
     ingressClassName: traefik
     hostName: "jenkins.local"
     annotations:
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure  # Solo HTTPS
-      traefik.ingress.kubernetes.io/router.tls: "true"  # Habilitar TLS para HTTPS
+      traefik.ingress.kubernetes.io/router.entrypoints: web  # Solo HTTP
+      traefik.ingress.kubernetes.io/router.tls: "false"  # Deshabilitar TLS temporalmente para probar
       traefik.ingress.kubernetes.io/auth-type: basic  # Autenticación básica
       traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret  # Secreto para autenticación básica
     paths:
-      - path: /
+      - path: / 
         pathType: Prefix  # ✅ Permite subrutas como /login, /static, etc.
         backend:
           service:
@@ -29,21 +29,21 @@ controller:
   healthProbes:
     livenessProbe:
       httpGet:
-        path: /login  # Endpoint de Jenkins para comprobar la disponibilidad
+        path: /login
         port: 8080
       initialDelaySeconds: 60  # Espera 60 segundos antes de empezar a verificar
       periodSeconds: 10  # Verifica cada 10 segundos
       failureThreshold: 3  # Si falla 3 veces, marca el pod como no saludable
     readinessProbe:
       httpGet:
-        path: /login  # Endpoint de Jenkins para comprobar si está listo
+        path: /login
         port: 8080
       initialDelaySeconds: 60  # Espera 60 segundos antes de empezar a verificar
       periodSeconds: 10  # Verifica cada 10 segundos
       failureThreshold: 3  # Si falla 3 veces, marca el pod como no listo
     startupProbe:
       httpGet:
-        path: /login  # Endpoint de Jenkins para comprobar si está listo para iniciar
+        path: /login
         port: 8080
       failureThreshold: 30  # Si falla 30 veces, marcar como no saludable
       periodSeconds: 10  # Verifica cada 10 segundos
