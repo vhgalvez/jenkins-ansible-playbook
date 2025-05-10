@@ -7,7 +7,7 @@ controller:
   ingress:
     enabled: true
     ingressClassName: traefik
-    hostName: "{{ jenkins_ingress_host }}"
+    hostName: "jenkins.local"  # Nombre correcto de host
     annotations:
       kubernetes.io/ingress.class: traefik
       traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
@@ -25,8 +25,8 @@ controller:
               number: 8080
     tls:
       - hosts:
-          - "{{ jenkins_ingress_host }}"
-        # secretName: jenkins-tls  # Descomentar si usas tu propio certificado TLS
+          - "jenkins.local"
+        # secretName: jenkins-tls  # Si usas tu propio certificado TLS, descomenta esta línea
 
   healthProbes:
     livenessProbe:
