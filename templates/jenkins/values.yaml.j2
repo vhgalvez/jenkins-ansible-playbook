@@ -26,7 +26,7 @@ controller:
     tls:
       - hosts:
           - "{{ jenkins_ingress_host }}"
-        # secretName: jenkins-tls  # Si usas un certificado TLS personalizado
+        # secretName: jenkins-tls  # Descomentar si usas tu propio certificado TLS
 
   healthProbes:
     livenessProbe:
