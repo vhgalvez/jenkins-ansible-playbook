@@ -14,7 +14,7 @@ controller:
       traefik.ingress.kubernetes.io/auth-type: basic
       traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret
     paths:
-      - path: /
+      - path: / 
         pathType: Prefix  # ✅ Permite subrutas como /login, /static, etc.
         backend:
           service:
@@ -24,7 +24,7 @@ controller:
     tls:
       - hosts:
           - "jenkins.local"
-        secretName: jenkins-tls  # Crea este Secret si usas certificado personalizado
+        # Eliminamos 'secretName' para usar el certificado TLS gestionado por Traefik
 
   healthProbes:
     livenessProbe:
