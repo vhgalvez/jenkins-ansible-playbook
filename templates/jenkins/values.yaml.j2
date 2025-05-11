@@ -14,7 +14,7 @@ controller:
       traefik.ingress.kubernetes.io/auth-type: basic  # Autenticación básica
       traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret  # Secreto para autenticación básica
     paths:
-      - path: /
+      - path: /  # Asegúrate de que la raíz esté configurada correctamente
         pathType: Prefix  # Permite subrutas como /login, /static, etc.
         backend:
           service:
