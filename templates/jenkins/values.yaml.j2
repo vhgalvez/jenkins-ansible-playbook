@@ -5,23 +5,23 @@ controller:
   jenkinsOpts: ""  # Opciones adicionales, sin --prefix=/ para evitar problemas con rutas
 
   ingress:
-    enabled: true
-    ingressClassName: traefik
-    hostName: "jenkins.cefaslocalserver.com"  # El dominio para acceder a Jenkins
+    enabled: true  # Activar Ingress para Jenkins
+    ingressClassName: traefik  # Asegura que Traefik maneje este Ingress
+    hostName: "jenkins.cefaslocalserver.com"  # Nombre de dominio para acceder a Jenkins
     annotations:
-      traefik.ingress.kubernetes.io/router.entrypoints: web  # Puerto 80 (HTTP)
-      traefik.ingress.kubernetes.io/router.tls: "false"  # Desactiva TLS (puedes habilitarlo más tarde)
+      traefik.ingress.kubernetes.io/router.entrypoints: web  # Esto asegura que el tráfico pase por el puerto 80 (HTTP)
+      traefik.ingress.kubernetes.io/router.tls: "false"  # Desactiva TLS por ahora si no lo estás utilizando
       traefik.ingress.kubernetes.io/auth-type: basic  # Autenticación básica habilitada
-      traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret  # Secreto para autenticación básica
+      traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret  # Secreto para la autenticación
     paths:
-      - path: /
+      - path: /  # Ruta para acceder a Jenkins
         pathType: Prefix  # Permite subrutas como /login, /static, etc.
         backend:
           service:
-            name: jenkins
+            name: jenkins  # El nombre del servicio de Jenkins en Kubernetes
             port:
-              number: 8080  # El puerto debe coincidir con la configuración interna del servicio de Jenkins
-    tls: []  # TLS desactivado para las pruebas
+              number: 8080  # Asegúrate de que el puerto coincida con el servicio de Jenkins
+    tls: []  # Desactiva TLS para las pruebas (puedes activarlo más tarde)
 
   healthProbes:
     livenessProbe:
