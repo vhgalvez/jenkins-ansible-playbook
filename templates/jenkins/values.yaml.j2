@@ -1,7 +1,7 @@
 # templates\jenkins\values.yaml.j2
 controller:
   serviceType: ClusterIP  # Tipo de servicio Kubernetes (ClusterIP para acceso interno)
-  servicePort: 8081  # Jenkins escucha en el puerto 8081 dentro de Kubernetes
+  servicePort: 8080  # Jenkins escucha en el puerto 8080 dentro de Kubernetes
   jenkinsOpts: ""  # Opciones adicionales, sin --prefix=/ para evitar problemas con rutas
 
   ingress:
@@ -20,26 +20,26 @@ controller:
           service:
             name: jenkins  # El nombre del servicio de Jenkins en Kubernetes
             port:
-              number: 8081  # Cambiar el puerto a 8081 para evitar conflicto con Traefik
+              number: 8080  # Cambiar el puerto a 8080 para evitar conflicto con Traefik
   healthProbes:
     livenessProbe:
       httpGet:
         path: /login
-        port: 8081  # Cambiar el puerto a 8081
+        port: 8080  # Cambiar el puerto a 8080
       initialDelaySeconds: 60
       periodSeconds: 10
       failureThreshold: 3
     readinessProbe:
       httpGet:
         path: /login
-        port: 8081  # Cambiar el puerto a 8081
+        port: 8080  # Cambiar el puerto a 8080
       initialDelaySeconds: 60
       periodSeconds: 10
       failureThreshold: 3
     startupProbe:
       httpGet:
         path: /login
-        port: 8081  # Cambiar el puerto a 8081
+        port: 8080  # Cambiar el puerto a 8080
       initialDelaySeconds: 60
       periodSeconds: 10
       failureThreshold: 30
