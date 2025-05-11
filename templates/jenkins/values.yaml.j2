@@ -30,21 +30,21 @@ controller:
     livenessProbe:
       httpGet:
         path: /login
-        port: 8081  # Cambiar a 8081 para verificar en el nuevo puerto
+        port: 8081  # Asegúrate de que el puerto coincide con el de Jenkins
       initialDelaySeconds: 60  # Espera 60 segundos antes de empezar a verificar
       periodSeconds: 10  # Verifica cada 10 segundos
       failureThreshold: 3  # Si falla 3 veces, marca el pod como no saludable
     readinessProbe:
       httpGet:
         path: /login
-        port: 8081  # Cambiar a 8081 para verificar en el nuevo puerto
+        port: 8081  # Asegúrate de que el puerto coincide con el de Jenkins
       initialDelaySeconds: 60  # Espera 60 segundos antes de empezar a verificar
       periodSeconds: 10  # Verifica cada 10 segundos
       failureThreshold: 3  # Si falla 3 veces, marca el pod como no listo
     startupProbe:
       httpGet:
         path: /login
-        port: 8081  # Cambiar a 8081 para verificar en el nuevo puerto
+        port: 8081  # Asegúrate de que el puerto coincide con el de Jenkins
       failureThreshold: 30  # Si falla 30 veces, marcar como no saludable
       periodSeconds: 10  # Verifica cada 10 segundos
       initialDelaySeconds: 60  # Espera 60 segundos antes de la primera comprobación
@@ -53,22 +53,3 @@ controller:
     enabled: false  # Desactivado si no usas configuración en código de Jenkins
 
   installPlugins: []  # Puedes agregar plugins de Jenkins aquí si es necesario
-
-# Si quieres cambiar otros valores del puerto para evitar conflictos adicionales, puedes agregar o modificar las secciones siguientes:
-
-# Para el servicio que se expone internamente dentro de Kubernetes:
-service:
-  annotations: {}
-  labels: {}
-  externalIPs: []
-  internal: true  # Configurado como true para accesibilidad dentro del cluster
-  externalTrafficPolicy: Cluster
-  loadBalancerIP: ""
-  type: ClusterIP  # Mantén esto como ClusterIP si no necesitas exposición externa directa
-
-# Aquí también puedes añadir configuraciones adicionales, como la persistencia de datos (volúmenes) si es necesario:
-persistence:
-  enabled: true
-  size: 10Gi
-  accessMode: ReadWriteOnce
-  storageClass: "standard"  # Cambia esto según la configuración de tu clúster de Kubernetes
