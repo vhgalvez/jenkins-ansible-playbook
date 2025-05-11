@@ -1,50 +1,50 @@
 # templates/jenkins/values.yaml.j2
 controller:
-  serviceType: ClusterIP
-  servicePort: 8080  # Usamos 8080 internamente en Kubernetes para Jenkins
-  jenkinsOpts: ""  # No usar --prefix=/ para evitar 404
+  serviceType: ClusterIP  # Tipo de servicio Kubernetes (ClusterIP para acceso interno)
+  servicePort: 8080  # Jenkins escucha en el puerto 8080 dentro de Kubernetes
+  jenkinsOpts: ""  # Opciones adicionales, sin --prefix=/ para evitar problemas con rutas
 
   ingress:
     enabled: true
     ingressClassName: traefik
-    hostName: "jenkins.cefaslocalserver.com"  # Nombre de dominio de Jenkins
+    hostName: "jenkins.cefaslocalserver.com"  # El dominio para acceder a Jenkins
     annotations:
-      traefik.ingress.kubernetes.io/router.entrypoints: web  # Acceso por puerto 80 (HTTP)
-      traefik.ingress.kubernetes.io/router.tls: "false"  # Desactiva TLS (solo para pruebas)
-      traefik.ingress.kubernetes.io/auth-type: basic  # Autenticación básica
+      traefik.ingress.kubernetes.io/router.entrypoints: web  # Puerto 80 (HTTP)
+      traefik.ingress.kubernetes.io/router.tls: "false"  # Desactiva TLS (puedes habilitarlo más tarde)
+      traefik.ingress.kubernetes.io/auth-type: basic  # Autenticación básica habilitada
       traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret  # Secreto para autenticación básica
     paths:
-      - path: /  # Asegúrate de que la raíz esté configurada correctamente
+      - path: /
         pathType: Prefix  # Permite subrutas como /login, /static, etc.
         backend:
           service:
             name: jenkins
             port:
-              number: 8080  # Cambiado a 8080 para coincidir con la configuración interna
-    tls: []  # TLS desactivado mientras pruebas con HTTP
+              number: 8080  # El puerto debe coincidir con la configuración interna del servicio de Jenkins
+    tls: []  # TLS desactivado para las pruebas
 
   healthProbes:
     livenessProbe:
       httpGet:
-        path: /login
-        port: 8080  # Cambiado a 8080
+        path: /login  # Verifica la página de login de Jenkins
+        port: 8080  # Asegúrate de que el puerto coincida con el servicio de Jenkins
       initialDelaySeconds: 60  # Espera 60 segundos antes de empezar a verificar
       periodSeconds: 10  # Verifica cada 10 segundos
       failureThreshold: 3  # Si falla 3 veces, marca el pod como no saludable
     readinessProbe:
       httpGet:
-        path: /login
-        port: 8080  # Cambiado a 8080
+        path: /login  # Verifica la página de login de Jenkins
+        port: 8080  # Asegúrate de que el puerto coincida con el servicio de Jenkins
       initialDelaySeconds: 60  # Espera 60 segundos antes de empezar a verificar
       periodSeconds: 10  # Verifica cada 10 segundos
       failureThreshold: 3  # Si falla 3 veces, marca el pod como no listo
     startupProbe:
       httpGet:
-        path: /login
-        port: 8080  # Cambiado a 8080
+        path: /login  # Verifica la página de login de Jenkins
+        port: 8080  # Asegúrate de que el puerto coincida con el servicio de Jenkins
       initialDelaySeconds: 60  # Espera 60 segundos antes de la primera comprobación
       periodSeconds: 10  # Verifica cada 10 segundos
-      failureThreshold: 30  # Si falla 30 veces, marcar como no saludable
+      failureThreshold: 30  # Si falla 30 veces, marca el pod como no saludable
 
   JCasC:
     enabled: false  # Desactivado si no usas configuración en código de Jenkins
