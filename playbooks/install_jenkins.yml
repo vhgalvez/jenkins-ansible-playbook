@@ -1,6 +1,5 @@
-# playbooks\install_jenkins.yml
----
-# Playbook para instalar o actualizar Jenkins en Kubernetes utilizando Helm
+# playbooks/install_jenkins.yml
+
 - name: Instalar o actualizar Jenkins utilizando Helm
   hosts: controller
   gather_facts: false
@@ -47,14 +46,14 @@
         helm repo add jenkins https://charts.jenkins.io || true
         helm repo update
 
-    # Instalar o actualizar Jenkins utilizando Helm a la versión 2.504.1
+    # Instalar o actualizar Jenkins utilizando Helm a la versión 5.8.43
     - name: Instalar o actualizar Jenkins utilizando Helm
       shell: |
         helm upgrade --install {{ jenkins_release_name }} jenkins/jenkins \
           --namespace {{ helm_namespace }} \
           --create-namespace=false \
           --values /tmp/values.yaml \
-          --version 2.504.1
+          --version 5.8.43
 
     # Esperar la instalación de Jenkins
     - name: Esperar a que Jenkins esté completamente desplegado
