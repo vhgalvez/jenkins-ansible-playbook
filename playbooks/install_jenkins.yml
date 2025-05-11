@@ -1,8 +1,7 @@
 # playbooks\install_jenkins.yml
----  
-# 🧩 Despliegue de Jenkins en Kubernetes desde el controller
-
-- name: Instalar Jenkins en Kubernetes desde el controller
+---
+# Playbook para instalar o actualizar Jenkins en Kubernetes utilizando Helm
+- name: Instalar o actualizar Jenkins utilizando Helm
   hosts: controller
   gather_facts: false
   vars_files:
@@ -12,19 +11,23 @@
     KUBECONFIG: "/home/victory/.kube/config"
 
   tasks:
+    # Confirmar carga de las variables
     - name: Confirmar carga de variables
       debug:
         msg: "✅ Variables cargadas correctamente."
 
+    # Renderizar el archivo values.yaml en el controller
     - name: Renderizar values.yaml.j2 en el controller
       template:
         src: ../templates/jenkins/values.yaml.j2
         dest: /tmp/values.yaml
 
+    # Crear namespace si no existe
     - name: Crear namespace si no existe
       shell: |
         kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
 
+    # Crear secreto de autenticación básica si no existe
     - name: Crear secreto de autenticación básica si no existe
       kubernetes.core.k8s:
         state: present
@@ -38,15 +41,29 @@
           data:
             auth-basic: "{{ lookup('file', 'files/htpasswd.txt') | b64encode }}"
 
+    # Añadir repositorio de Helm para Jenkins
     - name: Añadir repositorio de Helm para Jenkins
       shell: |
         helm repo add jenkins https://charts.jenkins.io || true
         helm repo update
 
-    - name: Instalar Jenkins usando Helm
+    # Instalar o actualizar Jenkins utilizando Helm a la versión 2.504.1
+    - name: Instalar o actualizar Jenkins utilizando Helm
       shell: |
         helm upgrade --install {{ jenkins_release_name }} jenkins/jenkins \
           --namespace {{ helm_namespace }} \
           --create-namespace=false \
           --values /tmp/values.yaml \
-          --version {{ jenkins_chart_version }}
+          --version 2.504.1
+
+    # Esperar la instalación de Jenkins
+    - name: Esperar a que Jenkins esté completamente desplegado
+      kubernetes.core.k8s_info:
+        kind: Pod
+        namespace: "{{ helm_namespace }}"
+        name: "{{ jenkins_release_name }}-0"
+      register: jenkins_pod_info
+      until: jenkins_pod_info.resources[0].status.phase == "Running"
+      retries: 10
+      delay: 15
+      timeout: 180

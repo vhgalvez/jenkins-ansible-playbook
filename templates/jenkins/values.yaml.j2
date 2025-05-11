@@ -1,18 +1,46 @@
 # templates/traefik-dashboard-ingress.yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: traefik-dashboard
-  namespace: kube-system
-spec:
-  rules:
-  - host: traefik.local  # Dominio para acceder al dashboard de Traefik
-    http:
-      paths:
-      - path: /dashboard  # Ruta para acceder al dashboard de Traefik
-        pathType: Prefix  # Permite subrutas como /dashboard/xyz
+controller:
+  serviceType: ClusterIP
+  servicePort: 8080
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hostName: "jenkins.cefaslocalserver.com"
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: web
+      traefik.ingress.kubernetes.io/router.tls: "false"
+      traefik.ingress.kubernetes.io/auth-type: basic
+      traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret
+    paths:
+      - path: /
+        pathType: Prefix
         backend:
           service:
-            name: traefik  # El nombre del servicio de Traefik en Kubernetes
+            name: jenkins
             port:
-              number: 8080  # El puerto del servicio de Traefik para el dashboard
+              number: 8080
+  healthProbes:
+    livenessProbe:
+      httpGet:
+        path: /login
+        port: 8080
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /login
+        port: 8080
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      failureThreshold: 3
+    startupProbe:
+      httpGet:
+        path: /login
+        port: 8080
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      failureThreshold: 30
+  JCasC:
+    enabled: false
+  installPlugins: []
