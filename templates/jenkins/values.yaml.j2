@@ -7,7 +7,7 @@ controller:
   ingress:
     enabled: true
     ingressClassName: traefik
-    hostName: "jenkins.local"
+    hostName: "jenkins.cefaslocalserver.com"
     annotations:
       traefik.ingress.kubernetes.io/router.entrypoints: web  # Solo HTTP, sin puerto 8080
       traefik.ingress.kubernetes.io/router.tls: "false"  # Deshabilitar TLS temporalmente para pruebas
