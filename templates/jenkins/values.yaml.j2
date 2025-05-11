@@ -2,7 +2,8 @@
 controller:
   serviceType: ClusterIP  # Tipo de servicio Kubernetes (ClusterIP para acceso interno)
   servicePort: 8080  # Jenkins escucha en el puerto 8080 dentro de Kubernetes
-  jenkinsOpts: ""  # Opciones adicionales, sin --prefix=/ para evitar problemas con rutas
+  targetPort: 8080   # Puerto al que el servicio debe dirigir el tráfico (puerto real del contenedor)
+  jenkinsOpts: ""    # Opciones adicionales, sin --prefix=/ para evitar problemas con rutas
 
   ingress:
     enabled: true  # Activar Ingress para Jenkins
@@ -12,7 +13,7 @@ controller:
       traefik.ingress.kubernetes.io/router.entrypoints: web  # Asegura que el tráfico pase por el puerto 80 (HTTP)
       traefik.ingress.kubernetes.io/router.tls: "false"  # Desactiva TLS por ahora si no lo estás utilizando
       traefik.ingress.kubernetes.io/auth-type: basic  # Autenticación básica habilitada
-      traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret  # Secreto para la autenticación
+      traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret  # Secreto para la autenticación básica
     paths:
       - path: /  # Ruta para acceder a Jenkins
         pathType: Prefix  # Permite subrutas como /login, /static, etc.
@@ -20,12 +21,13 @@ controller:
           service:
             name: jenkins  # El nombre del servicio de Jenkins en Kubernetes
             port:
-              number: 8080  # Cambiar el puerto a 8080 para evitar conflicto con Traefik
+              number: 8080  # El servicio está escuchando en el puerto 8080, ya que Jenkins está en ese puerto
+
   healthProbes:
     livenessProbe:
       httpGet:
         path: /login
-        port: 8080  # Cambiar el puerto a 8080
+        port: 8080  # Cambiar el puerto a 8080, que es el puerto donde Jenkins escucha
       initialDelaySeconds: 60
       periodSeconds: 10
       failureThreshold: 3
