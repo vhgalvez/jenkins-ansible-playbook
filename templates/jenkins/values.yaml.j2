@@ -1,13 +1,13 @@
 # templates/jenkins/values.yaml.j2
 controller:
   serviceType: ClusterIP
-  servicePort: 8080
-  jenkinsOpts: ""  # No usar --prefix=/ para evitar 404
+  servicePort: 8082  # Cambiado a 8082 para evitar conflicto con Traefik
+  jenkinsOpts: "--httpPort=8082"  # Jenkins escuchará en el puerto 8082
 
   ingress:
     enabled: true
     ingressClassName: traefik
-    hostName: "jenkins.cefaslocalserver.com"
+    hostName: "jenkins.cefaslocalserver.com"  # Usa el mismo nombre de host aquí
     annotations:
       traefik.ingress.kubernetes.io/router.entrypoints: web  # Solo HTTP, sin puerto 8080
       traefik.ingress.kubernetes.io/router.tls: "false"  # Deshabilitar TLS temporalmente para pruebas
@@ -20,31 +20,31 @@ controller:
           service:
             name: jenkins
             port:
-              number: 8080  # Asegúrate de que Jenkins usa este puerto
+              number: 8082  # Asegúrate de que Jenkins usa este puerto (8082)
     tls:
       - hosts:
-          - "jenkins.local"
+          - "jenkins.cefaslocalserver.com"  # Ajustar para coincidir con tu hostname
         certResolver: default  # Usar el resolver ACME de Traefik para TLS (deshabilitado en esta configuración de prueba)
 
   healthProbes:
     livenessProbe:
       httpGet:
         path: /login
-        port: 8080
+        port: 8082  # Asegúrate de que el puerto coincide con el de Jenkins
       initialDelaySeconds: 60  # Espera 60 segundos antes de empezar a verificar
       periodSeconds: 10  # Verifica cada 10 segundos
       failureThreshold: 3  # Si falla 3 veces, marca el pod como no saludable
     readinessProbe:
       httpGet:
         path: /login
-        port: 8080
+        port: 8082  # Asegúrate de que el puerto coincide con el de Jenkins
       initialDelaySeconds: 60  # Espera 60 segundos antes de empezar a verificar
       periodSeconds: 10  # Verifica cada 10 segundos
       failureThreshold: 3  # Si falla 3 veces, marca el pod como no listo
     startupProbe:
       httpGet:
         path: /login
-        port: 8080
+        port: 8082  # Asegúrate de que el puerto coincide con el de Jenkins
       failureThreshold: 30  # Si falla 30 veces, marcar como no saludable
       periodSeconds: 10  # Verifica cada 10 segundos
       initialDelaySeconds: 60  # Espera 60 segundos antes de la primera comprobación
