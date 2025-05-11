@@ -9,22 +9,22 @@ controller:
     ingressClassName: traefik
     hostName: "jenkins.local"
     annotations:
-      traefik.ingress.kubernetes.io/router.entrypoints: web  # Solo HTTP
-      traefik.ingress.kubernetes.io/router.tls: "false"  # Deshabilitar TLS temporalmente para probar
+      traefik.ingress.kubernetes.io/router.entrypoints: web  # Solo HTTP, sin puerto 8080
+      traefik.ingress.kubernetes.io/router.tls: "false"  # Deshabilitar TLS temporalmente para pruebas
       traefik.ingress.kubernetes.io/auth-type: basic  # Autenticación básica
       traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret  # Secreto para autenticación básica
     paths:
-      - path: / 
+      - path: /
         pathType: Prefix  # ✅ Permite subrutas como /login, /static, etc.
         backend:
           service:
             name: jenkins
             port:
-              number: 8080
+              number: 8080  # Asegúrate de que Jenkins usa este puerto
     tls:
       - hosts:
           - "jenkins.local"
-        certResolver: default  # Usar el resolver ACME de Traefik para TLS
+        certResolver: default  # Usar el resolver ACME de Traefik para TLS (deshabilitado en esta configuración de prueba)
 
   healthProbes:
     livenessProbe:
