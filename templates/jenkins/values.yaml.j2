@@ -10,8 +10,8 @@ controller:
     ingressClassName: traefik  # Asegura que Traefik maneje este Ingress
     hostName: "jenkins.cefaslocalserver.com"  # Nombre de dominio para acceder a Jenkins
     annotations:
-      traefik.ingress.kubernetes.io/router.entrypoints: web  # Asegura que el tráfico pase por el puerto 80 (HTTP)
-      traefik.ingress.kubernetes.io/router.tls: "false"  # Desactiva TLS por ahora si no lo estás utilizando
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure  # Asegura que el tráfico pase por el puerto 443 (HTTPS)
+      traefik.ingress.kubernetes.io/router.tls: "true"  # Activa TLS para habilitar HTTPS
       traefik.ingress.kubernetes.io/auth-type: basic  # Autenticación básica habilitada
       traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret  # Secreto para la autenticación básica
     paths:
