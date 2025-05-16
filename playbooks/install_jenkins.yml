@@ -1,5 +1,4 @@
 # playbooks/install_jenkins.yml
-
 - name: Instalar o actualizar Jenkins utilizando Helm
   hosts: controller
   gather_facts: false
@@ -10,23 +9,22 @@
     KUBECONFIG: "/home/victory/.kube/config"
 
   tasks:
-    # Confirmar carga de las variables
+
     - name: Confirmar carga de variables
       debug:
         msg: "✅ Variables cargadas correctamente."
 
-    # Renderizar el archivo values.yaml en el controller
     - name: Renderizar values.yaml.j2 en el controller
       template:
         src: ../templates/jenkins/values.yaml.j2
         dest: /tmp/values.yaml
 
-    # Crear namespace si no existe
     - name: Crear namespace si no existe
       shell: |
         kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
+      args:
+        executable: /bin/bash
 
-    # Crear secreto de autenticación básica si no existe
     - name: Crear secreto de autenticación básica si no existe
       kubernetes.core.k8s:
         state: present
@@ -38,15 +36,15 @@
             namespace: "{{ helm_namespace }}"
           type: Opaque
           data:
-            auth-basic: "{{ lookup('file', 'files/htpasswd.txt') | b64encode }}"
+            auth-basic: "{{ lookup('file', '../files/htpasswd.txt') | b64encode }}"
 
-    # Añadir repositorio de Helm para Jenkins
     - name: Añadir repositorio de Helm para Jenkins
       shell: |
         helm repo add jenkins https://charts.jenkins.io || true
         helm repo update
+      args:
+        executable: /bin/bash
 
-    # Instalar o actualizar Jenkins utilizando Helm a la versión 5.8.43
     - name: Instalar o actualizar Jenkins utilizando Helm
       shell: |
         helm upgrade --install {{ jenkins_release_name }} jenkins/jenkins \
@@ -54,8 +52,9 @@
           --create-namespace=false \
           --values /tmp/values.yaml \
           --version 5.8.43
+      args:
+        executable: /bin/bash
 
-    # Esperar la instalación de Jenkins
     - name: Esperar a que Jenkins esté completamente desplegado
       kubernetes.core.k8s_info:
         kind: Pod
@@ -65,4 +64,3 @@
       until: jenkins_pod_info.resources[0].status.phase == "Running"
       retries: 10
       delay: 15
-      timeout: 180
