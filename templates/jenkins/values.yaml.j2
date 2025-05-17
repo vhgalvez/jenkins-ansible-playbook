@@ -1,13 +1,14 @@
 # templates\jenkins\values.yaml.j2
 controller:
   serviceType: ClusterIP
-  servicePort: 8081
-  targetPort: 8081
-  jenkinsOpts: ""
+  servicePort: 8080
+  targetPort: 8080
+  jenkinsOpts: ""  # ⚠️ No uses --prefix= o fallará el Ingress
 
   ingress:
     enabled: true
     ingressClassName: traefik
+    hostName: "jenkins.cefaslocalserver.com"
     annotations:
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.tls: "true"
@@ -16,32 +17,26 @@ controller:
     paths:
       - path: /
         pathType: Prefix
-        backend:
-          serviceName: jenkins
-          servicePort: 8081
-    hostName: jenkins.cefaslocalserver.com
 
   healthProbes:
     livenessProbe:
       httpGet:
         path: /login
-        port: http
+        port: 8080
       initialDelaySeconds: 60
       periodSeconds: 10
       failureThreshold: 3
-
     readinessProbe:
       httpGet:
         path: /login
-        port: http
+        port: 8080
       initialDelaySeconds: 60
       periodSeconds: 10
       failureThreshold: 3
-
     startupProbe:
       httpGet:
         path: /login
-        port: http
+        port: 8080
       initialDelaySeconds: 60
       periodSeconds: 10
       failureThreshold: 30
