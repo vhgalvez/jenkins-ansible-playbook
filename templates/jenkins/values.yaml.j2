@@ -22,21 +22,23 @@ controller:
     livenessProbe:
       httpGet:
         path: /login
-        port: 8081
+        port: http  # Usar "http" como nombre del puerto expuesto por el container (según el chart)
       initialDelaySeconds: 60
       periodSeconds: 10
       failureThreshold: 3
+
     readinessProbe:
       httpGet:
         path: /login
-        port: 8081
+        port: http
       initialDelaySeconds: 60
       periodSeconds: 10
       failureThreshold: 3
+
     startupProbe:
       httpGet:
         path: /login
-        port: 8081
+        port: http
       initialDelaySeconds: 60
       periodSeconds: 10
       failureThreshold: 30
