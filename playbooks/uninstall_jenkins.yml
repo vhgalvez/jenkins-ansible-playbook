@@ -14,39 +14,41 @@
   tasks:
     - name: 🚀 Iniciando desinstalación de Jenkins...
       debug:
-        msg: "Desinstalación iniciada para la release de Jenkins '{{ jenkins_release_name }}' en el namespace '{{ helm_namespace }}'."
+        msg: "Desinstalando la release '{{ jenkins_release_name }}' del namespace '{{ helm_namespace }}'."
 
-    - name: 🧹 Desinstalando Helm release de Jenkins
+    - name: 🧹 Eliminar release de Helm
       shell: helm uninstall {{ jenkins_release_name }} -n {{ helm_namespace }}
-      register: helm_uninstall_output
-      ignore_errors: true
+      register: helm_uninstall
+      changed_when: "'uninstalled' in helm_uninstall.stdout"
+      failed_when: helm_uninstall.rc != 0 and "'not found' not in helm_uninstall.stderr"
 
-    - name: Mostrar salida de Helm uninstall
+    - name: 📄 Mostrar resultado de Helm uninstall
       debug:
-        msg: "{{ helm_uninstall_output.stdout }}"
-      when: helm_uninstall_output.rc == 0
+        msg: "{{ helm_uninstall.stdout | default(helm_uninstall.stderr) }}"
 
-    - name: 🧨 Eliminando namespace de Jenkins (si existe)
-      shell: kubectl delete namespace {{ helm_namespace }}
-      register: delete_namespace_output
-      ignore_errors: true
+    - name: 🗑 Eliminar namespace de Jenkins (si existe)
+      shell: |
+        kubectl get ns {{ helm_namespace }} &>/dev/null && \
+        kubectl delete ns {{ helm_namespace }} || echo "Namespace no existe"
+      register: ns_delete
+      changed_when: "'deleted' in ns_delete.stdout"
+      failed_when: false
 
-    - name: Mostrar salida de eliminación de namespace
+    - name: 📄 Mostrar resultado de eliminación del namespace
       debug:
-        msg: "{{ delete_namespace_output.stdout }}"
-      when: delete_namespace_output.rc == 0
+        msg: "{{ ns_delete.stdout }}"
 
-    - name: ❌ Verificando si el namespace Jenkins ya está eliminado
-      shell: kubectl get namespace {{ helm_namespace }} || true
-      register: check_namespace_exists
+    - name: ✅ Verificar si el namespace fue eliminado
+      shell: kubectl get ns {{ helm_namespace }} 2>/dev/null || echo ""
+      register: ns_check
       changed_when: false
 
-    - name: Confirmación final de eliminación de Jenkins
+    - name: 🎉 Confirmación de eliminación total
       debug:
-        msg: "Jenkins y el namespace '{{ helm_namespace }}' han sido eliminados correctamente."
-      when: check_namespace_exists.stdout == ""
+        msg: "✅ Jenkins y el namespace '{{ helm_namespace }}' fueron eliminados completamente."
+      when: ns_check.stdout == ""
 
-    - name: Error en la desinstalación si el namespace persiste
+    - name: ⚠️ Namespace aún existe
       debug:
-        msg: "Hubo un error al eliminar el namespace '{{ helm_namespace }}'. Verifica la configuración y los permisos."
-      when: check_namespace_exists.stdout != ""
+        msg: "⚠️ El namespace '{{ helm_namespace }}' aún existe. Revisa recursos colgantes o permisos."
+      when: ns_check.stdout != ""
