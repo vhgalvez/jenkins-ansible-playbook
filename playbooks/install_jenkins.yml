@@ -9,7 +9,6 @@
     KUBECONFIG: "/home/victory/.kube/config"
 
   tasks:
-
     - name: Confirmar carga de variables
       debug:
         msg: "✅ Variables cargadas correctamente."
@@ -66,6 +65,6 @@
       delay: 15
 
       tls:
-              - hosts:
-                  - "{{ ingress_host }}"
-                secretName: selfsigned-cert
+        - hosts:
+            - "{{ ingress_host }}"
+          secretName: selfsigned-cert
