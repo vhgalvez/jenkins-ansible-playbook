@@ -163,3 +163,6 @@ sudo ss -tuln | grep -E '32000|32001|32002|32003'
 
 
 curl -Ik https://jenkins.local --insecure -u admin:123456
+
+export JENKINS_AUTH_USER=admin
+export JENKINS_AUTH_PASS=SuperPassword123
