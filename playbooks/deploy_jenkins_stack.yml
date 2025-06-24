@@ -1,0 +1,10 @@
+# playbooks\deploy_jenkins_stack.yml
+---
+- name: 🔐 Generar y aplicar SealedSecret de autenticación para Jenkins
+  import_playbook: 01_generate-auth-secret.yml
+
+- name: 🧩 Renderizar y aplicar Middleware + IngressRoute para Jenkins
+  import_playbook: 02_render_and_apply_jenkins_ingress.yml
+
+- name: 📦 Instalar Jenkins con Helm
+  import_playbook: 03_install_jenkins.yml

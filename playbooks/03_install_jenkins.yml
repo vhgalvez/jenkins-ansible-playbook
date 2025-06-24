@@ -1,4 +1,4 @@
-# playbooks/install_jenkins.yml
+# playbooks/03_install_jenkins.yml
 - name: Instalar o actualizar Jenkins utilizando Helm
   hosts: controller
   gather_facts: false
