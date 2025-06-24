@@ -1,0 +1,52 @@
+---
+- name: 🚀 Renderizar y aplicar IngressRoute y Middleware para Jenkins
+  hosts: localhost
+  gather_facts: false
+
+  vars_files:
+    - ../vars/main.yml
+
+  vars:
+    templates_dir: "../templates/jenkins"
+    output_dir: "{{ playbook_dir }}/files"
+    ingress_template: "jenkins-dashboard-ingressroute.yaml.j2"
+    middleware_template: "jenkins-dashboard-middleware.yaml.j2"
+    rendered_ingress: "{{ output_dir }}/jenkins-dashboard-ingressroute.yaml"
+    rendered_middleware: "{{ output_dir }}/jenkins-dashboard-middleware.yaml"
+
+  tasks:
+    - name: 📁 Crear carpeta de salida si no existe
+      file:
+        path: "{{ output_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: 🧩 Renderizar plantilla de Middleware para Jenkins
+      template:
+        src: "{{ templates_dir }}/{{ middleware_template }}"
+        dest: "{{ rendered_middleware }}"
+
+    - name: 🌐 Renderizar plantilla de IngressRoute para Jenkins
+      template:
+        src: "{{ templates_dir }}/{{ ingress_template }}"
+        dest: "{{ rendered_ingress }}"
+
+    - name: 🚀 Aplicar Middleware al clúster
+      command: >
+        {{ kubectl_path }} --kubeconfig {{ kubeconfig_path }}
+        apply -f {{ rendered_middleware }}
+      register: apply_middleware
+      changed_when: "'created' in apply_middleware.stdout or 'configured' in apply_middleware.stdout"
+
+    - name: 🚀 Aplicar IngressRoute al clúster
+      command: >
+        {{ kubectl_path }} --kubeconfig {{ kubeconfig_path }}
+        apply -f {{ rendered_ingress }}
+      register: apply_ingress
+      changed_when: "'created' in apply_ingress.stdout or 'configured' in apply_ingress.stdout"
+
+    - name: ✅ Mostrar resultado final
+      debug:
+        msg:
+          - "✅ Middleware aplicado: {{ rendered_middleware }}"
+          - "✅ IngressRoute aplicado: {{ rendered_ingress }}"
