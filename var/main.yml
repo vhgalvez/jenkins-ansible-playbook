@@ -1,20 +1,30 @@
 # vars/main.yml
 
-argocd_auth_user: "{{ lookup('env', 'ARGOCD_AUTH_USER') }}"
-argocd_auth_pass: "{{ lookup('env', 'ARGOCD_AUTH_PASS') }}"
+# 🔐 Credenciales de autenticación básica para Jenkins
+jenkins_auth_user: "{{ lookup('env', 'JENKINS_AUTH_USER') }}"
+jenkins_auth_pass: "{{ lookup('env', 'JENKINS_AUTH_PASS') }}"
 
-argocd_namespace: argocd
-argocd_dashboard_domain: argocd.socialdevs.site
+# 🌐 Dominio de acceso al Dashboard de Jenkins
+jenkins_dashboard_domain: jenkins.socialdevs.site
 
-argocd_middleware_name: argocd-dashboard-auth
-argocd_secret_name: argocd-dashboard-auth
+# 🧩 Namespace donde se desplegará Jenkins
+jenkins_namespace: jenkins
 
+# 🔒 Nombres de Middleware y Secret sellado para Jenkins
+jenkins_middleware_name: jenkins-dashboard-auth
+jenkins_secret_name: jenkins-dashboard-auth
+
+# 🔐 TLS: Secret con certificado wildcard
 tls_secret_name: wildcard-socialdevs-tls
 
+# 🧰 Herramientas CLI y rutas de autenticación
 kubeconfig_path: "/home/victory/.kube/config"
 kubeconfig_token_path: "/home/victory/.kube/token.jwt"
 kubectl_path: "/usr/local/bin/kubectl"
 kubeseal_path: "/usr/local/bin/kubeseal"
 
+# 💡 Dirección VIP del clúster Kubernetes
 vip_kubernetes: "192.168.0.32"
+
+# 🌐 Redirección HTTP → HTTPS
 http_to_https_redirect: true
