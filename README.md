@@ -141,8 +141,8 @@ sudo nano .env
 
 JENKINS_AUTH_USER=admin
 JENKINS_AUTH_PASS=SuperPassword123
-JENKINS_AUTH_USER_UI=adminjenkins
-JENKINS_AUTH_PASS_UI=passwordjenkinsui
+JENKINS_AUTH_USER_UI=admin
+JENKINS_AUTH_PASS_UI=SuperPassword123
 
 
 export JENKINS_AUTH_USER="admin"
