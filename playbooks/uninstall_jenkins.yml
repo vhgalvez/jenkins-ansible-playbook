@@ -3,7 +3,7 @@
 # 🧹 Desinstalar Jenkins de Kubernetes usando Ansible
 
 - name: Desinstalar Jenkins de Kubernetes
-  hosts: controller
+  hosts: localhost
   gather_facts: false
   vars_files:
     - ../group_vars/all.yml

@@ -115,39 +115,7 @@ sudo ss -tuln | grep -E '32000|32001|32002|32003'
 
 
 
-# 1. Matar port-forward anteriores
-
-```bash
-sudo pkill -f "kubectl port-forward"
-```
-sudo grep "kubectl port-forward" 
-
-
-# 2. Verificar servicios
-
-   
-```bash
-kubectl get svc -A -o wide | grep -E 'jenkins|grafana|prometheus|longhorn'
-```
-
-# 3. Crear todos los port-forwards
-
-   
-```bash
-
-nohup kubectl port-forward -n jenkins svc/jenkins --address 0.0.0.0 32000:8080 > /tmp/jenkins-port-forward.log 2>&1 &
-
-nohup kubectl port-forward -n monitoring svc/prometheus-server --address 0.0.0.0 32001:80 > /tmp/prometheus-port-forward.log 2>&1 &
-
-nohup kubectl port-forward -n monitoring svc/grafana --address 0.0.0.0 32002:3000 > /tmp/grafana-port-forward.log 2>&1 &
-
-nohup kubectl port-forward -n longhorn-system svc/longhorn-frontend --address 0.0.0.0 32003:80 > /tmp/longhorn-port-forward.log 2>&1 &
-
-nohup kubectl port-forward -n argocd svc/argocd-server --address 0.0.0.0 32004:80 > /tmp/argocd-port-forward.log 2>&1 &
-
-
-
-```
+#
 
 # 4. Comprobar puertos abiertos
 
@@ -164,5 +132,19 @@ sudo ss -tuln | grep -E '32000|32001|32002|32003'
 
 curl -Ik https://jenkins.local --insecure -u admin:123456
 
-export JENKINS_AUTH_USER=admin
-export JENKINS_AUTH_PASS=SuperPassword123
+export JENKINS_AUTH_USER="admin"
+export JENKINS_AUTH_PASS="SuperPassword123"
+
+
+sudo nano .env
+# .env para Jenkins (autenticación Traefik)
+JENKINS_AUTH_USER=admin
+JENKINS_AUTH_PASS=SuperPassword123
+
+
+sudo -E ansible-playbook -i inventory/hosts.ini playbooks/install_jenkins.yml
+
+
+
+[controller]
+192.168.0.15 ansible_user=monitoring ansible_ssh_private_key_file=/home/victory/.ssh/id_rsa ansible_become=true ansible_become_method=sudo ansible_become_pass=Gdh88K28
