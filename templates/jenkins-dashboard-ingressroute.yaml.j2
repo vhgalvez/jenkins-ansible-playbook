@@ -1,23 +1,19 @@
 # templates\jenkins-dashboard-ingressroute.yaml.j2
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
 metadata:
-  name: jenkins-dashboard-ingress
+  name: {{ jenkins_middleware_name }}
   namespace: {{ jenkins_namespace }}
+  labels:
+    app.kubernetes.io/name: jenkins
+    app.kubernetes.io/component: middleware
+    environment: prod
+    access: internal
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/auth-type: basic
-    traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret
+    created-by: ansible
+    maintained-by: devops@socialdevs.site
 spec:
-  rules:
-    - host: "{{ jenkins_dashboard_domain }}"
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: jenkins
-                port:
-                  number: 8080
+  basicAuth:
+    secret: {{ jenkins_secret_name }}
+    realm: "Jenkins Dashboard"
+    removeHeader: true
