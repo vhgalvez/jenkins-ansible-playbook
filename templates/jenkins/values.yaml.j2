@@ -8,13 +8,12 @@ controller:
   ingress:
     enabled: true
     ingressClassName: traefik
-    hostName: "jenkins.cefaslocalserver.com"
+    hostName: "{{ jenkins_dashboard_domain }}"
     annotations:
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.tls: "true"
       traefik.ingress.kubernetes.io/auth-type: basic
       traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret
-    # ⚠️ Sección CORRECTA del backend para Ingress (esquema actualizado de Kubernetes Ingress API)
     paths:
       - path: /
         pathType: Prefix
