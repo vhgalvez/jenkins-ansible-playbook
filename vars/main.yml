@@ -1,4 +1,5 @@
 # vars/main.yml
+
 # 🔐 Credenciales de autenticación básica para Jenkins
 jenkins_auth_user: "{{ lookup('env', 'JENKINS_AUTH_USER') }}"
 jenkins_auth_pass: "{{ lookup('env', 'JENKINS_AUTH_PASS') }}"
@@ -11,7 +12,7 @@ jenkins_namespace: jenkins
 
 # 🔒 Nombres de Middleware y Secret sellado para Jenkins
 jenkins_middleware_name: jenkins-dashboard-auth
-jenkins_secret_name: jenkins-dashboard-auth
+jenkins_secret_name: jenkins-dashboard-auth-secret  # Cambié a un nombre único
 
 # 🔐 TLS: Secret con certificado wildcard
 tls_secret_name: wildcard-socialdevs-tls
