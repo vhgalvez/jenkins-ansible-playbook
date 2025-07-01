@@ -8,3 +8,31 @@
 
 - name: 📦 Instalar Jenkins con Helm
   import_playbook: 03_install_jenkins.yml
+
+tasks:
+  - name: Validar que kubeconfig esté definido
+    assert:
+      that: kubeconfig_path is defined
+      msg: "kubeconfig_path no definido"
+
+  - name: Validar credenciales de autenticación
+    assert:
+      that:
+        - jenkins_auth_user is defined
+        - jenkins_auth_pass is defined
+      msg: "Credenciales de autenticación no definidas."
+
+  - name: Comprobar acceso al Dashboard de Jenkins
+    shell: >
+      curl --http1.1 -k -u {{ jenkins_auth_user }}:{{ jenkins_auth_pass }}
+      https://{{ jenkins_dashboard_domain }}/
+      --max-time 10 --silent --output /dev/null --write-out '%{http_code}'
+    register: dashboard_status
+    retries: 3  # Número de reintentos
+    delay: 5  # Retardo entre los intentos (en segundos)
+    changed_when: false
+    failed_when: dashboard_status.stdout not in ['200','302','307','401']
+
+  - name: Mostrar resultado HTTP
+    debug:
+      msg: "Código HTTP recibido: {{ dashboard_status.stdout }}"
