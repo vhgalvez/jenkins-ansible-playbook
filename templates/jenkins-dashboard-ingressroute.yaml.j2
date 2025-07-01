@@ -23,3 +23,5 @@ spec:
           scheme: http
   tls:
     secretName: {{ tls_secret_name }}
+  middlewares:
+    - name: {{ jenkins_middleware_name }}
