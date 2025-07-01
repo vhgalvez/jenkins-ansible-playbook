@@ -142,7 +142,11 @@ JENKINS_AUTH_USER=admin
 JENKINS_AUTH_PASS=SuperPassword123
 
 
-sudo -E ansible-playbook -i inventory/hosts.ini playbooks/install_jenkins.yml
+export JENKINS_AUTH_USER="admin"
+export JENKINS_AUTH_PASS="SuperPassword123"
+
+source .env
+sudo -E ansible-playbook -i inventory/hosts.ini playbooks/deploy_jenkins_stack.yml
 
 
 
