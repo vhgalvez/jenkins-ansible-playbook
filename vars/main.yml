@@ -16,7 +16,7 @@ jenkins_namespace: jenkins
 
 # 🔒 Nombres de Middleware y Secret sellado para Jenkins
 jenkins_middleware_name: jenkins-dashboard-auth
-jenkins_secret_name: jenkins-dashboard-auth-secret  # Asegúrate de que este valor esté correctamente asignado
+jenkins_secret_name: jenkins-dashboard-auth-secret  # Aquí está correctamente asignado
 
 # 🔐 TLS: Secret con certificado wildcard
 tls_secret_name: wildcard-socialdevs-tls
