@@ -2,13 +2,12 @@
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: {{ jenkins_middleware_name }}
+  name: ingressroute-jenkins-dashboard
   namespace: {{ jenkins_namespace }}
   labels:
     app.kubernetes.io/name: jenkins
-    app.kubernetes.io/component: ingressroute
+    app.kubernetes.io/component: ingress
     environment: prod
-    access: internal
   annotations:
     created-by: ansible
     maintained-by: devops@socialdevs.site
@@ -16,11 +15,13 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`{{ jenkins_dashboard_domain }}`)
+    - match: Host(`{{ jenkins_dashboard_domain }}`) && PathPrefix(`/`)
       kind: Rule
       services:
         - name: jenkins
           port: 8080
-  middlewares:
-    - name: {{ jenkins_middleware_name }}
-      namespace: {{ jenkins_namespace }}
+          scheme: http
+  tls:
+    store:
+      name: default
+      namespace: kube-system
