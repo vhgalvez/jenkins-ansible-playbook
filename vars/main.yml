@@ -35,7 +35,7 @@ http_to_https_redirect: true
 
 # 📦 Helm
 jenkins_chart_version: "5.8.63"
-jenkins_release_name: jenkins
+jenkins_release_name: "jenkins"  # Solo una vez
 jenkins_values_template: "values.yaml.j2"
-jenkins_ingress_host: "jenkins.local"
+jenkins_ingress_host: "jenkins.socialdevs.site"
 helm_namespace: jenkins
