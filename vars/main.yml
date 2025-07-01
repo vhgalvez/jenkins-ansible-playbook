@@ -34,7 +34,7 @@ vip_kubernetes: "192.168.0.32"
 http_to_https_redirect: true
 
 # 📦 Helm
-jenkins_chart_version: "4.5.0"
+jenkins_chart_version: "5.8.63"
 jenkins_release_name: jenkins
 jenkins_values_template: "values.yaml.j2"
 jenkins_ingress_host: "jenkins.local"
