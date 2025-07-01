@@ -83,3 +83,9 @@ export JENKINS_AUTH_PASS_UI=SuperPassword123
 
 source .env
 sudo -E ansible-playbook -i inventory/hosts.ini playbooks/deploy_jenkins_stack.yml
+
+cat .env
+JENKINS_AUTH_USER=admin
+JENKINS_AUTH_PASS=SuperPassword123
+JENKINS_AUTH_USER_UI=admin
+JENKINS_AUTH_PASS_UI=SuperPassword123

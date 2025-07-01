@@ -20,29 +20,16 @@
 
     - name: Crear namespace si no existe
       shell: |
-        kubectl get namespace {{ helm_namespace }} || kubectl create namespace {{ helm_namespace }}
+        kubectl get namespace {{ jenkins_namespace }} || kubectl create namespace {{ jenkins_namespace }}
       args:
         executable: /bin/bash
-
-    - name: Crear secreto de autenticación básica si no existe
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: Secret
-          metadata:
-            name: jenkins-auth-secret
-            namespace: "{{ helm_namespace }}"
-          type: Opaque
-          data:
-            auth-basic: "{{ lookup('file', '../files/htpasswd.txt') | b64encode }}"
 
     - name: Añadir repositorio de Helm para Jenkins
-      shell: |
-        helm repo add jenkins https://charts.jenkins.io || true
-        helm repo update
-      args:
-        executable: /bin/bash
+      community.kubernetes.helm_repository:
+        name: jenkins
+        repo_url: https://charts.jenkins.io
+        state: present
+      register: helm_repo_add
 
     - name: Instalar o actualizar Jenkins utilizando Helm
       shell: |
