@@ -22,6 +22,4 @@ spec:
           port: 8080
           scheme: http
   tls:
-    store:
-      name: default
-      namespace: kube-system
+    secretName: {{ tls_secret_name }}
