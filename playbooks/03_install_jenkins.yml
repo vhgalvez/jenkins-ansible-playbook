@@ -63,8 +63,3 @@
       until: jenkins_pod_info.resources[0].status.phase == "Running"
       retries: 10
       delay: 15
-
-      tls:
-        - hosts:
-            - "{{ ingress_host }}"
-          secretName: selfsigned-cert
