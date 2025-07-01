@@ -8,7 +8,7 @@
     - ../vars/main.yml
 
   vars:
-    templates_dir: "../templates/jenkins"
+    templates_dir: "../templates"
     output_dir: "{{ playbook_dir }}/files"
     ingress_template: "jenkins-dashboard-ingressroute.yaml.j2"
     middleware_template: "jenkins-dashboard-middleware.yaml.j2"
