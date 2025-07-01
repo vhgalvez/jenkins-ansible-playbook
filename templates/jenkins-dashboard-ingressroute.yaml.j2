@@ -15,7 +15,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`{{ jenkins_dashboard_domain }}`) && PathPrefix(`/`)
+    - match: Host({{ jenkins_dashboard_domain }}) && PathPrefix(/)
       kind: Rule
       services:
         - name: jenkins

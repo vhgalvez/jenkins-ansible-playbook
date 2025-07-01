@@ -31,8 +31,8 @@
         https://{{ jenkins_dashboard_domain }}/
         --max-time 10 --silent --output /dev/null --write-out '%{http_code}'
       register: dashboard_status
-      retries: 3  # Número de reintentos
-      delay: 5  # Retardo entre los intentos (en segundos)
+      retries: 3 # Número de reintentos
+      delay: 5 # Retardo entre los intentos (en segundos)
       changed_when: false
       failed_when: dashboard_status.stdout not in ['200','302','307','401']
 
