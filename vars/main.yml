@@ -4,6 +4,11 @@
 jenkins_auth_user: "{{ lookup('env', 'JENKINS_AUTH_USER') }}"
 jenkins_auth_pass: "{{ lookup('env', 'JENKINS_AUTH_PASS') }}"
 
+
+# 🛠️ Credenciales de autenticación para la interfaz de usuario de Jenkins
+Jenkins_jenkins_auth_user_ui: "{{ lookup('env', 'JENKINS_AUTH_USER_UI') }}"
+Jenkins_jenkins_auth_pass_ui: "{{ lookup('env', 'JENKINS_AUTH_PASS_UI') }}"
+
 # 🌐 Dominio de acceso al Dashboard de Jenkins
 jenkins_dashboard_domain: jenkins.socialdevs.site
 

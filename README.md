@@ -138,8 +138,11 @@ export JENKINS_AUTH_PASS="SuperPassword123"
 
 sudo nano .env
 # .env para Jenkins (autenticación Traefik)
+
 JENKINS_AUTH_USER=admin
 JENKINS_AUTH_PASS=SuperPassword123
+JENKINS_AUTH_USER_UI=adminjenkins
+JENKINS_AUTH_PASS_UI=passwordjenkinsui
 
 
 export JENKINS_AUTH_USER="admin"
@@ -152,3 +155,10 @@ sudo -E ansible-playbook -i inventory/hosts.ini playbooks/deploy_jenkins_stack.y
 
 [controller]
 192.168.0.15 ansible_user=monitoring ansible_ssh_private_key_file=/home/victory/.ssh/id_rsa ansible_become=true ansible_become_method=sudo ansible_become_pass=Gdh88K28
+
+
+
+export JENKINS_AUTH_USER="miusuariojenkins"
+export JENKINS_AUTH_PASS="micontrasenasegura"
+export JENKINS_AUTH_USER_UI="adminjenkins"
+export JENKINS_AUTH_PASS_UI="passwordjenkinsui"
