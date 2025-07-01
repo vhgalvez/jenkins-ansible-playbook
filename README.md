@@ -75,10 +75,10 @@ sudo -E ansible-playbook -i inventory/hosts.ini playbooks/deploy_jenkins_stack.y
 
 
 # Variables de entorno para Jenkins
-export JENKINS_AUTH_USER=admin
-export JENKINS_AUTH_PASS=SuperPassword123
-export JENKINS_AUTH_USER_UI=admin
-export JENKINS_AUTH_PASS_UI=SuperPassword123
+export JENKINS_AUTH_USER="admin"
+export JENKINS_AUTH_PASS="SuperPassword123"
+export JENKINS_AUTH_USER_UI="admin"
+export JENKINS_AUTH_PASS_UI="SuperPassword123"
 
 
 source .env
