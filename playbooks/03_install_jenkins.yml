@@ -37,7 +37,7 @@
           --namespace {{ helm_namespace }} \
           --create-namespace=false \
           --values /tmp/values.yaml \
-          --version 5.8.43
+          --version 5.8.63
       args:
         executable: /bin/bash
 
