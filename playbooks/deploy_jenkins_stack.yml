@@ -29,20 +29,10 @@
       shell: >
         curl --http1.1 -k -u {{ jenkins_auth_user }}:{{ jenkins_auth_pass }}
         https://{{ jenkins_dashboard_domain }}/
-        --max-time 10 --silent --output /dev/null --write-out '%{http_code}'
+        --max-time 15 --silent --output /dev/null --write-out '%{http_code}'
       register: dashboard_status
-      retries: 3 # Número de reintentos
-      delay: 5 # Retardo entre los intentos (en segundos)
+      retries: 10 # Aumentar reintentos
+      delay: 6 # Más tiempo entre intentos
+      until: dashboard_status.stdout in ['200', '302', '307', '401']
       changed_when: false
-      failed_when: dashboard_status.stdout not in ['200','302','307','401']
-
-    # Mostrar resultado HTTP
-    - name: 🛠️ Mostrar resultado HTTP
-      debug:
-        msg: "Código HTTP recibido: {{ dashboard_status.stdout }}"
-
-    # Fallar si no se puede acceder al Dashboard de Jenkins después de los reintentos
-    - name: ❌ Fallar si no se puede acceder al Dashboard de Jenkins
-      fail:
-        msg: "El acceso al Dashboard de Jenkins falló después de 3 intentos. Código HTTP: {{ dashboard_status.stdout }}"
-      when: dashboard_status.stdout not in ['200','302','307','401']
+      failed_when: dashboard_status.stdout not in ['200', '302', '307', '401']
