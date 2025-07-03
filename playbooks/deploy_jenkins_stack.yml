@@ -1,6 +1,6 @@
 # playbooks\deploy_jenkins_stack.yml
 ---
-- name: 📦 Copiar Secret TLS al namespace destino
+- name: 📦 0 Copiar Secret TLS (wildcard-socialdevs-tls)
   import_playbook: 00_copy_tls_secret.yml
 
 - name: 🔐 Generar y aplicar SealedSecret de autenticación para Jenkins
