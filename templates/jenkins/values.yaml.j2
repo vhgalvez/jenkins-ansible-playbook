@@ -47,6 +47,23 @@ controller:
       failureThreshold: 30
 
   JCasC:
-    enabled: false
+    enabled: true
+    configScripts:
+      security: |
+        jenkins:
+          securityRealm:
+            local:
+              allowsSignup: false
+              users:
+                - id: {{ jenkins_auth_user_ui }}
+                  password: {{ jenkins_auth_pass_ui }}
+          authorizationStrategy:
+            loggedInUsersCanDoAnything:
+              allowAnonymousRead: false
 
-  installPlugins: []
+  installPlugins:
+    - configuration-as-code
+    - credentials
+    - git
+    - matrix-auth
+    - workflow-aggregator
