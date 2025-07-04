@@ -71,7 +71,7 @@
       msg: "{{ ns_delete.stdout }}"
 
   - name: ✅ Confirmar eliminación total
-    shell: {{ kubectl_path }} get ns {{ helm_namespace }} 2>/dev/null || true
+    shell: "{{ kubectl_path }} get ns {{ helm_namespace }} 2>/dev/null || true"
     register: ns_check
     changed_when: false
 
