@@ -23,9 +23,5 @@ spec:
           scheme: http
       middlewares:
         - name: {{ jenkins_middleware_name }}
-{% if http_to_https_redirect | default(false) %}
-        - name: default-redirectscheme
-          namespace: kube-system
-{% endif %}
   tls:
-    secretName: {{ tls_secret_name }}
+    secretName: {{ tls_secret_name }}  # 👉 Certificado autofirmado preexistente

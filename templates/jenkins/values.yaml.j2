@@ -1,37 +1,35 @@
 # templates\jenkins\values.yaml.j2
+# templates/jenkins/values.yaml.j2
+# Jenkins Helm chart values
+# Esta plantilla Jinja2 genera un values.yaml coherente para el chart
+# jenkins/jenkins. Corrige los problemas de dependencias de plugins,
+# desactiva el Ingress nativo (usamos IngressRoute Traefik) y configura
+# la seguridad básica vía JCasC.
+
 controller:
+  # Imagen y puerto de servicio
+  image: "jenkins/jenkins"
+  tag: "2.504.3-jdk21"
+
   serviceType: ClusterIP
   servicePort: 8080
   targetPort: 8080
 
-  # ❌ Desactivamos el Ingress nativo del chart (usamos IngressRoute separado)
+  # Ingress desactivado (usamos IngressRoute de Traefik externo)
   ingress:
     enabled: false
 
-  # Evita el asistente de instalación
-  initContainerEnv:
-    - name: JAVA_OPTS
-      value: "-Djenkins.install.runSetupWizard=false"
+  # Desactivar el asistente de instalación
+  installWizard: false
 
-  # No recargar config automáticamente
-  sidecars:
-    configAutoReload:
-      enabled: false
+  # Variables de entorno opcionales (por ejemplo, proxy corporativo)
+  # env:
+  #   - name: HTTPS_PROXY
+  #     value: "http://proxy.mydomain:3128"
+  #   - name: NO_PROXY
+  #     value: ".svc,.cluster.local,10.0.0.0/8"
 
-  # Esperar a que los plugins estén listos antes de JCasC
-  initContainers:
-    - name: plugin-init
-      image: jenkins/jenkins:2.504.3-jdk21
-      command:
-        - bash
-        - -c
-        - |
-          until [ -f /var/jenkins_home/plugins/configuration-as-code.jpi ]; do sleep 1; done
-      volumeMounts:
-        - name: jenkins-home
-          mountPath: /var/jenkins_home
-
-  # Configuración de seguridad (JCasC)
+  # Configuración de seguridad con Jenkins Configuration as Code (JCasC)
   JCasC:
     enabled: true
     configScripts:
@@ -41,28 +39,31 @@ controller:
             local:
               allowsSignup: false
               users:
-                - id: {{ jenkins_auth_user_ui }}
-                  password: {{ jenkins_auth_pass_ui }}
+                - id: "{{ jenkins_auth_user_ui }}"
+                  password: "{{ jenkins_auth_pass_ui }}"
           authorizationStrategy:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
 
-  # Plugins fijos
+  # Lista de plugins a instalar con versiones fijas y compatibles
   installPlugins:
-    - kubernetes:4358.vcfd9c5a_0a_f51
-    - kubernetes-client-api:6.15.0-550.v2229d7b_220d1
+    # Core CI/CD
     - workflow-aggregator:608.v67378e9d3db_1
-    - configuration-as-code:1971.vf9280461ea_89
     - git:5.7.0
-    - credentials:1311.vcf0a_474e4f29
-    - matrix-auth:3.3
+    - kubernetes:4358.vcfd9c5a_0a_f51
+    # Seguridad
+    - matrix-auth:3.3.1
+    - credentials:1415.v831096eb_5534
+    # Configuración
+    - configuration-as-code:1971.vf9280461ea_89
+
   overwritePlugins: true
 
-  # Recursos del Pod
+  # Recursos solicitados y límites para el contenedor principal
   resources:
-    requests: { cpu: 200m, memory: 512Mi }
-    limits:   { cpu: "2",  memory: 4Gi }
-
-# ❗ Descomenta si NO vas a usar agentes Kubernetes
-# agent:
-#   enabled: false
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 4Gi
