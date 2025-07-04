@@ -2,7 +2,6 @@
 # 🧹 Desinstalar Jenkins de Kubernetes usando Ansible (solo lo creado por Helm)
 
 ---
-
 - name: 🚀 Desinstalar Jenkins de Kubernetes
   hosts: localhost
   gather_facts: false
