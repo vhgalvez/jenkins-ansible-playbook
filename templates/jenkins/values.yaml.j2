@@ -6,29 +6,21 @@
 # la seguridad básica vía JCasC.
 
 controller:
-  # Imagen y puerto de servicio
-  image: "jenkins/jenkins"
-  tag: "2.504.3-jdk21"
+  image:
+    registry: docker.io
+    repository: jenkins/jenkins
+    tag: 2.504.3-jdk21
+    pullPolicy: IfNotPresent
 
   serviceType: ClusterIP
   servicePort: 8080
   targetPort: 8080
 
-  # Ingress desactivado (usamos IngressRoute de Traefik externo)
   ingress:
     enabled: false
 
-  # Desactivar el asistente de instalación
   installWizard: false
 
-  # Variables de entorno opcionales (por ejemplo, proxy corporativo)
-  # env:
-  #   - name: HTTPS_PROXY
-  #     value: "http://proxy.mydomain:3128"
-  #   - name: NO_PROXY
-  #     value: ".svc,.cluster.local,10.0.0.0/8"
-
-  # Configuración de seguridad con Jenkins Configuration as Code (JCasC)
   JCasC:
     enabled: true
     configScripts:
@@ -44,21 +36,15 @@ controller:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
 
-  # Lista de plugins a instalar con versiones fijas y compatibles
   installPlugins:
-    # Core CI/CD
     - workflow-aggregator:608.v67378e9d3db_1
     - git:5.7.0
     - kubernetes:4358.vcfd9c5a_0a_f51
-    # Seguridad
     - matrix-auth:3.3.1
     - credentials:1415.v831096eb_5534
-    # Configuración
     - configuration-as-code:1971.vf9280461ea_89
-
   overwritePlugins: true
 
-  # Recursos solicitados y límites para el contenedor principal
   resources:
     requests:
       cpu: 200m
