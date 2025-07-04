@@ -1,8 +1,8 @@
 # playbooks/uninstall_jenkins.yml
 # 🧹 Desinstalar Jenkins de Kubernetes usando Ansible (solo lo creado por Helm)
-
+# Desinstalar Jenkins de Kubernetes usando Ansible (Helm + recursos asociados)
 ---
-- name: 🚀 Desinstalar Jenkins de Kubernetes
+- name: Desinstalar Jenkins y recursos relacionados
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -13,19 +13,19 @@
     KUBECONFIG: "/home/victory/.kube/config"
 
   tasks:
-    - name: 🔍 Verificar que helm está disponible
+    - name: Verificar que helm está disponible
       command: which helm
       register: helm_check
       failed_when: helm_check.rc != 0
       changed_when: false
 
-    - name: 🔍 Verificar que kubectl está disponible
+    - name: Verificar que kubectl está disponible
       command: which kubectl
       register: kubectl_check
       failed_when: kubectl_check.rc != 0
       changed_when: false
 
-    - name: 📦 Desinstalar release '{{ jenkins_release_name }}' en namespace '{{ helm_namespace }}'
+    - name: Desinstalar release '{{ jenkins_release_name }}' en namespace '{{ helm_namespace }}'
       shell: |
         helm list -n {{ helm_namespace }} | grep -q "^{{ jenkins_release_name }}\b" \
         && helm uninstall {{ jenkins_release_name }} -n {{ helm_namespace }} \
@@ -34,24 +34,26 @@
       changed_when: "'uninstall' in helm_uninstall.stdout"
       failed_when: false
 
-    - name: 📄 Resultado de Helm uninstall
+    - name: Mostrar salida de helm uninstall
       debug:
         msg: "{{ helm_uninstall.stdout | default(helm_uninstall.stderr) }}"
 
-    - name: 🧨 Eliminar recursos personalizados creados por Jenkins (PVC, SealedSecrets, IngressRoutes)
+    - name: Eliminar recursos personalizados (PVC, SealedSecret, IngressRoute, Middleware, TLS Secret)
       shell: |
         kubectl delete pvc -l app.kubernetes.io/instance={{ jenkins_release_name }} -n {{ helm_namespace }} || true
         kubectl delete sealedsecret -l app.kubernetes.io/instance={{ jenkins_release_name }} -n {{ helm_namespace }} || true
         kubectl delete ingressroute -l app.kubernetes.io/instance={{ jenkins_release_name }} -n {{ helm_namespace }} || true
+        kubectl delete middleware {{ jenkins_middleware_name }} -n {{ helm_namespace }} || true
+        kubectl delete secret {{ tls_secret_name }} -n {{ helm_namespace }} || true
       register: extra_resources
       changed_when: "'deleted' in extra_resources.stdout"
       failed_when: false
 
-    - name: 📄 Resultado de eliminación de recursos adicionales
+    - name: Mostrar resultado de eliminación de recursos personalizados
       debug:
         msg: "{{ extra_resources.stdout }}"
 
-    - name: 🗑 Eliminar namespace '{{ helm_namespace }}' si quedó vacío
+    - name: Eliminar namespace '{{ helm_namespace }}' si quedó vacío
       shell: |
         kubectl get ns {{ helm_namespace }} &>/dev/null \
         && kubectl delete ns {{ helm_namespace }} || echo "Namespace no existe"
@@ -59,21 +61,21 @@
       changed_when: "'deleted' in ns_delete.stdout"
       failed_when: false
 
-    - name: 📄 Resultado de eliminación del namespace
+    - name: Mostrar resultado de eliminación del namespace
       debug:
         msg: "{{ ns_delete.stdout }}"
 
-    - name: 🔍 Verificar si el namespace fue eliminado
+    - name: Verificar si el namespace fue eliminado
       shell: kubectl get ns {{ helm_namespace }} 2>/dev/null || echo ""
       register: ns_check
       changed_when: false
 
-    - name: ✅ Confirmación de eliminación completa
+    - name: Confirmación de eliminación completa
       debug:
-        msg: "✅ Jenkins y el namespace '{{ helm_namespace }}' fueron eliminados completamente."
+        msg: "Jenkins y el namespace '{{ helm_namespace }}' fueron eliminados completamente."
       when: ns_check.stdout == ""
 
-    - name: ⚠️ El namespace '{{ helm_namespace }}' aún existe
+    - name: Advertencia si el namespace aún existe
       debug:
-        msg: "⚠️ Revisa recursos colgantes o falta de permisos para eliminar el namespace '{{ helm_namespace }}'."
+        msg: "El namespace '{{ helm_namespace }}' aún existe. Verifica recursos colgantes o permisos."
       when: ns_check.stdout != ""
