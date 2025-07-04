@@ -1,8 +1,8 @@
 # playbooks/uninstall_jenkins.yml
 ---
-# 🧹 Desinstalar Jenkins de Kubernetes usando Ansible
+# 🧹 Desinstalar Jenkins de Kubernetes usando Ansible (solo lo creado por Helm)
 
-- name: Desinstalar Jenkins de Kubernetes
+- name: 🚀 Desinstalar Jenkins de Kubernetes
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -13,57 +13,67 @@
     KUBECONFIG: "/home/victory/.kube/config"
 
   tasks:
-    - name: 🚀 Iniciando desinstalación de Jenkins...
-      debug:
-        msg: "Desinstalando la release '{{ jenkins_release_name }}' del namespace '{{ helm_namespace }}'."
+    - name: 🔍 Verificar que helm está disponible
+      command: which helm
+      register: helm_check
+      failed_when: helm_check.rc != 0
+      changed_when: false
 
-    # Eliminar Jenkins usando Helm, sin eliminar Helm ni otros recursos globales
-    - name: 🧹 Eliminar release de Jenkins
-      shell: helm uninstall {{ jenkins_release_name }} -n {{ helm_namespace }}
+    - name: 🔍 Verificar que kubectl está disponible
+      command: which kubectl
+      register: kubectl_check
+      failed_when: kubectl_check.rc != 0
+      changed_when: false
+
+    - name: 📦 Desinstalar release '{{ jenkins_release_name }}' en namespace '{{ helm_namespace }}'
+      shell: |
+        helm list -n {{ helm_namespace }} | grep -q "^{{ jenkins_release_name }}\b" \
+        && helm uninstall {{ jenkins_release_name }} -n {{ helm_namespace }} \
+        || echo "Release no existe"
       register: helm_uninstall
-      changed_when: "'uninstalled' in helm_uninstall.stdout"
-      failed_when: helm_uninstall.rc != 0 and "'not found' not in helm_uninstall.stderr"
+      changed_when: "'uninstall' in helm_uninstall.stdout"
+      failed_when: false
 
-    - name: 📄 Mostrar resultado de Helm uninstall
+    - name: 📄 Resultado de Helm uninstall
       debug:
         msg: "{{ helm_uninstall.stdout | default(helm_uninstall.stderr) }}"
 
-    # Eliminar recursos específicos de Jenkins del namespace, pero no el namespace
-    - name: 🧹 Eliminar recursos específicos de Jenkins en el namespace
+    - name: 🧨 Eliminar recursos personalizados creados por Jenkins (PVC, SealedSecrets, IngressRoutes)
       shell: |
-        kubectl delete deployment,svc,pod,secret,configmap -l app=jenkins -n {{ helm_namespace }}
-      register: jenkins_resources_delete
-      changed_when: "'deleted' in jenkins_resources_delete.stdout"
+        kubectl delete pvc -l app.kubernetes.io/instance={{ jenkins_release_name }} -n {{ helm_namespace }} || true
+        kubectl delete sealedsecret -l app.kubernetes.io/instance={{ jenkins_release_name }} -n {{ helm_namespace }} || true
+        kubectl delete ingressroute -l app.kubernetes.io/instance={{ jenkins_release_name }} -n {{ helm_namespace }} || true
+      register: extra_resources
+      changed_when: "'deleted' in extra_resources.stdout"
       failed_when: false
 
-    - name: 📄 Mostrar resultado de eliminación de recursos específicos de Jenkins
+    - name: 📄 Resultado de eliminación de recursos adicionales
       debug:
-        msg: "{{ jenkins_resources_delete.stdout }}"
+        msg: "{{ extra_resources.stdout }}"
 
-    # Eliminar el namespace de Jenkins si ya no se requiere (opcional)
-    - name: 🗑 Eliminar namespace de Jenkins (si ya no es necesario)
+    - name: 🗑 Eliminar namespace '{{ helm_namespace }}' si quedó vacío
       shell: |
-        kubectl get ns {{ helm_namespace }} &>/dev/null && \
-        kubectl delete ns {{ helm_namespace }} || echo "Namespace no existe"
+        kubectl get ns {{ helm_namespace }} &>/dev/null \
+        && kubectl delete ns {{ helm_namespace }} || echo "Namespace no existe"
       register: ns_delete
       changed_when: "'deleted' in ns_delete.stdout"
       failed_when: false
 
-    - name: 📄 Mostrar resultado de eliminación del namespace
+    - name: 📄 Resultado de eliminación del namespace
       debug:
         msg: "{{ ns_delete.stdout }}"
 
-    - name: ✅ Verificar si el namespace fue eliminado
+    - name: 🔍 Verificar si el namespace fue eliminado
       shell: kubectl get ns {{ helm_namespace }} 2>/dev/null || echo ""
       register: ns_check
       changed_when: false
 
-    - name: 🎉 Confirmación de eliminación total
+    - name: ✅ Confirmación de eliminación completa
       debug:
-        msg: "✅ Jenkins y los recursos específicos del namespace '{{ helm_namespace }}' fueron eliminados completamente."
+        msg: "✅ Jenkins y el namespace '{{ helm_namespace }}' fueron eliminados completamente."
       when: ns_check.stdout == ""
 
-    - name: ⚠️ Namespace aún existe
+    - name: ⚠️ El namespace '{{ helm_namespace }}' aún existe
       debug:
-        msg: "⚠️ El namespace '{{ helm_namespace }}' aún existe. Revisa recursos colgantes o permisos."
+        msg: "⚠️ Revisa recursos colgantes o falta de permisos para eliminar el namespace '{{ helm_namespace }}'."
       when: ns_check.stdout != ""
