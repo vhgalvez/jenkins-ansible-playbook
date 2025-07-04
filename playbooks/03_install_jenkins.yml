@@ -10,6 +10,7 @@
     KUBECONFIG: "{{ kubeconfig_path }}"
 
   tasks:
+
     - name: ✅ Confirmar carga de variables
       debug:
         msg: "✅ Variables cargadas correctamente."
@@ -23,13 +24,19 @@
         repo_url: https://traefik.github.io/charts
         state: present
 
-    - name: 🧠 Instalar CRDs de Traefik 3 (traefik-crds)
+    - name: 🔍 Verificar si ya existen los CRDs de Traefik
+      shell: kubectl get crd ingressroutes.traefik.io --ignore-not-found
+      register: traefik_crd_check
+      changed_when: false
+
+    - name: 🧠 Instalar CRDs de Traefik 3 (solo si no existen)
       shell: |
         helm upgrade --install traefik-crds traefik/traefik-crds \
           --namespace kube-system \
           --create-namespace
       args:
         executable: /bin/bash
+      when: traefik_crd_check.stdout == ""
 
     # (Opcional) Instalar Traefik si no lo tienes
     # - name: 🚀 Instalar Traefik (opcional)
