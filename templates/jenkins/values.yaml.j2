@@ -1,4 +1,5 @@
 # templates\jenkins\values.yaml.j2
+
 controller:
   serviceType: ClusterIP
   servicePort: 8080
@@ -13,7 +14,7 @@ controller:
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.tls: "true"
       traefik.ingress.kubernetes.io/auth-type: basic
-      traefik.ingress.kubernetes.io/auth-secret: jenkins-auth-secret
+      traefik.ingress.kubernetes.io/auth-secret: "{{ jenkins_secret_name }}"  # ← usa la variable
     paths:
       - path: /
         pathType: Prefix
@@ -62,10 +63,10 @@ controller:
               allowAnonymousRead: false
 
   installPlugins:
-    # Plugins mínimos necesarios para la configuración anterior
-    - configuration-as-code      # JCasC core
-    - credentials                # Manejo de credenciales
-    - git                        # SCM más común
-    - matrix-auth                # Control de roles/ACL
-    - workflow-aggregator        # Pipeline básico
-    # 👉 Solo añade 'kubernetes' si planeas usar Cloud agents en K8s
+    # Plugins imprescindibles (incluimos 'kubernetes' para evitar el BootFailure)
+    - kubernetes               # Soporte Cloud agents + requerido por JCasC (cloud: kubernetes)
+    - configuration-as-code    # Núcleo JCasC
+    - workflow-aggregator      # Pipeline básico
+    - credentials              # Manejo de credenciales
+    - git                      # SCM más común
+    - matrix-auth              # Control de roles/ACL
