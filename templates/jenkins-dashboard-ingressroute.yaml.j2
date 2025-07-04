@@ -21,7 +21,7 @@ spec:
         - name: jenkins
           port: 8080
           scheme: http
-      middlewares:        # 👈 liga el Middleware básico
+      middlewares: # liga el Middleware básico
         - name: {{ jenkins_middleware_name }}
   tls:
     secretName: {{ tls_secret_name }}
