@@ -9,15 +9,14 @@ controller:
   servicePort: 8080
   targetPort: 8080
 
-  # Desactivamos el Ingress nativo: usaremos IngressRoute de Traefik
   ingress:
-    enabled: false
-
-  # Desactiva el asistente de instalación
+    enabled: false          # seguimos usando IngressRoute Traefik
   installWizard: false
 
-  # --- JCasC ---------------------------------------------------------------
-  JCasC:
+  # ❶ ELIMINAMOS el initContainer defectuoso
+  initContainers: []        # ← sin init, Jenkins arranca directo
+
+  JCasC:                    # … tu sección de configuración as-is …
     enabled: true
     configScripts:
       01-security.yaml: |
@@ -32,8 +31,7 @@ controller:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
 
-  # --- Plugins (sin versiones) --------------------------------------------
-  installPlugins:
+  installPlugins:           # … lista de plugins …
     - kubernetes
     - workflow-aggregator
     - git
@@ -42,8 +40,7 @@ controller:
     - credentials
   overwritePlugins: true
 
-  # --- Recursos -----------------------------------------------------------
-  resources:
+  resources:                # límites / peticiones
     requests:
       cpu: 200m
       memory: 512Mi
