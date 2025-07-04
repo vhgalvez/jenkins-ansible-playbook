@@ -62,8 +62,10 @@ controller:
               allowAnonymousRead: false
 
   installPlugins:
-    - configuration-as-code
-    - credentials
-    - git
-    - matrix-auth
-    - workflow-aggregator
+    # Plugins mínimos necesarios para la configuración anterior
+    - configuration-as-code      # JCasC core
+    - credentials                # Manejo de credenciales
+    - git                        # SCM más común
+    - matrix-auth                # Control de roles/ACL
+    - workflow-aggregator        # Pipeline básico
+    # 👉 Solo añade 'kubernetes' si planeas usar Cloud agents en K8s
