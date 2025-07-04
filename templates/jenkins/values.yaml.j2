@@ -1,18 +1,9 @@
 # templates\jenkins\values.yaml.j2
-# ───────────────────────────────────────────────────────────────────────────────
-# Jenkins Helm chart values · probado con chart 5.8.63  (Jenkins 2.504.3-jdk21)
-# ───────────────────────────────────────────────────────────────────────────────
 controller:
-  # ———————————————————————————————————————————————————————————————
-  # Servicio interno
-  # ———————————————————————————————————————————————————————————————
   serviceType: ClusterIP
   servicePort: 8080
   targetPort: 8080
 
-  # ———————————————————————————————————————————————————————————————
-  # Ingress (Traefik v3)
-  # ———————————————————————————————————————————————————————————————
   ingress:
     enabled: true
     ingressClassName: traefik
@@ -20,7 +11,6 @@ controller:
     annotations:
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.tls: "true"
-      # Auth básica (Middleware básico)
       traefik.ingress.kubernetes.io/auth-type: basic
       traefik.ingress.kubernetes.io/auth-secret: "{{ jenkins_secret_name }}"
 {% if http_to_https_redirect | default(false) %}
@@ -35,16 +25,13 @@ controller:
             port:
               number: 8080
 
-  # ———————————————————————————————————————————————————————————————
-  # Init container para asegurar plugins antes de JCasC
-  # ———————————————————————————————————————————————————————————————
+  # evita el asistente y espera plugins antes de JCasC
   initContainerEnv:
     - name: JAVA_OPTS
       value: "-Djenkins.install.runSetupWizard=false"
 
   sidecars:
-    configAutoReload:
-      enabled: false          # lo re-habilitarás más tarde si lo necesitas
+    configAutoReload: { enabled: false }
 
   initContainers:
     - name: plugin-init
@@ -53,17 +40,11 @@ controller:
         - bash
         - -c
         - |
-          echo "⌛ Esperando descarga de plugins…"
-          until [ -f /var/jenkins_home/plugins/configuration-as-code.jpi ]; do
-            sleep 1
-          done
+          until [ -f /var/jenkins_home/plugins/configuration-as-code.jpi ]; do sleep 1; done
       volumeMounts:
         - name: jenkins-home
           mountPath: /var/jenkins_home
 
-  # ———————————————————————————————————————————————————————————————
-  # Configuration-as-Code (solo bloque de seguridad)
-  # ———————————————————————————————————————————————————————————————
   JCasC:
     enabled: true
     configScripts:
@@ -79,9 +60,6 @@ controller:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
 
-  # ———————————————————————————————————————————————————————————————
-  # Plugins con versiones fijas (incluye ‘kubernetes’)
-  # ———————————————————————————————————————————————————————————————
   installPlugins:
     - kubernetes:4358.vcfd9c5a_0a_f51
     - kubernetes-client-api:6.15.0-550.v2229d7b_220d1
@@ -92,19 +70,9 @@ controller:
     - matrix-auth:3.3
   overwritePlugins: true
 
-  # ———————————————————————————————————————————————————————————————
-  # Recursos (ajusta según tu clúster)
-  # ———————————————————————————————————————————————————————————————
   resources:
-    requests:
-      cpu: 200m
-      memory: 512Mi
-    limits:
-      cpu: "2"
-      memory: 4Gi
+    requests: { cpu: 200m, memory: 512Mi }
+    limits:   { cpu: "2",  memory: 4Gi }
 
-# ---------------------------------------------------------------------------
-# Desactiva agentes en K8s si no los usarás
-# agent:
-#   enabled: false
-# ---------------------------------------------------------------------------
+# Descomenta si no usarás agentes Kubernetes
+# agent: { enabled: false }
