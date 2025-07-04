@@ -1,4 +1,5 @@
 # playbooks/03_install_jenkins.yml
+
 - name: Instalar CRDs de Traefik y Jenkins con Helm
   hosts: localhost
   gather_facts: false
@@ -9,7 +10,6 @@
     KUBECONFIG: "{{ kubeconfig_path }}"
 
   tasks:
-
     - name: ✅ Confirmar carga de variables
       debug:
         msg: "✅ Variables cargadas correctamente."
