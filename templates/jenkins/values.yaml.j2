@@ -1,30 +1,26 @@
 # templates/jenkins/values.yaml.j2
-# Jenkins Helm chart values
-# Esta plantilla Jinja2 genera un values.yaml coherente para el chart
-# jenkins/jenkins. Corrige los problemas de dependencias de plugins,
-# desactiva el Ingress nativo (usamos IngressRoute Traefik) y configura
-# la seguridad básica vía JCasC.
-
 controller:
   image:
-    registry: docker.io
     repository: jenkins/jenkins
-    tag: 2.504.3-jdk21
+    tag: "2.504.3-jdk21"
     pullPolicy: IfNotPresent
 
   serviceType: ClusterIP
   servicePort: 8080
   targetPort: 8080
 
+  # Desactivamos el Ingress nativo: usaremos IngressRoute de Traefik
   ingress:
     enabled: false
 
+  # Desactiva el asistente de instalación
   installWizard: false
 
+  # --- JCasC ---------------------------------------------------------------
   JCasC:
     enabled: true
     configScripts:
-      security: |
+      01-security.yaml: |
         jenkins:
           securityRealm:
             local:
@@ -36,15 +32,17 @@ controller:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
 
+  # --- Plugins (sin versiones) --------------------------------------------
   installPlugins:
-    - workflow-aggregator:608.v67378e9d3db_1
-    - git:5.7.0
-    - kubernetes:4358.vcfd9c5a_0a_f51
-    - matrix-auth:3.3.1
-    - credentials:1415.v831096eb_5534
-    - configuration-as-code:1971.vf9280461ea_89
+    - kubernetes
+    - workflow-aggregator
+    - git
+    - configuration-as-code
+    - matrix-auth
+    - credentials
   overwritePlugins: true
 
+  # --- Recursos -----------------------------------------------------------
   resources:
     requests:
       cpu: 200m
