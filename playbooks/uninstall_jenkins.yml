@@ -1,95 +1,80 @@
 # playbooks/uninstall_jenkins.yml
-# 🧹 Desinstalar Jenkins y sus recursos asociados de Kubernetes (Helm + objetos personalizados)
 ---
-- name: 🧹 Desinstalar Jenkins y limpiar recursos asociados
+# 🧹 Desinstalar Jenkins y sus recursos asociados de Kubernetes (Helm + objetos personalizados)
+- name: Desinstalar Jenkins y recursos relacionados
   hosts: localhost
   gather_facts: false
   vars_files:
     - ../vars/main.yml
 
   environment:
-    PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-    KUBECONFIG: "/home/victory/.kube/config"
+    KUBECONFIG: "{{ kubeconfig_path }}"
+    PATH: "/usr/local/bin:/usr/bin:/bin"
 
   tasks:
-    #####################################################################
-    # 1. Validar herramientas disponibles
-    #####################################################################
-    - name: 🔍 Verificar que helm está disponible
-      command: which helm
-      register: helm_check
-      failed_when: helm_check.rc != 0
-      changed_when: false
+  #####################################################################
+  # 0. Verificar binarios
+  #####################################################################
+  - name: 🔍 Verificar que Helm está disponible
+    command: which helm
+    changed_when: false
 
-    - name: 🔍 Verificar que kubectl está disponible
-      command: which kubectl
-      register: kubectl_check
-      failed_when: kubectl_check.rc != 0
-      changed_when: false
+  - name: 🔍 Verificar que kubectl está disponible
+    command: which {{ kubectl_path | basename }}
+    changed_when: false
 
-    #####################################################################
-    # 2. Desinstalar Jenkins desde Helm
-    #####################################################################
-    - name: 🧼 Desinstalar release '{{ jenkins_release_name }}' en namespace '{{ helm_namespace }}'
-      shell: |
-        helm list -n {{ helm_namespace }} | grep -q "^{{ jenkins_release_name }}\b" \
+  #####################################################################
+  # 1. Desinstalar la release de Helm (si existe)
+  #####################################################################
+  - name: 🚮 Desinstalar release '{{ jenkins_release_name }}'
+    shell: |
+      helm list -n {{ helm_namespace }} | grep -q '^{{ jenkins_release_name }}\b' \
         && helm uninstall {{ jenkins_release_name }} -n {{ helm_namespace }} \
         || echo "Release no existe"
-      register: helm_uninstall
-      changed_when: "'uninstall' in helm_uninstall.stdout"
-      failed_when: false
+    register: helm_uninstall
+    changed_when: "'uninstall' in helm_uninstall.stdout"
 
-    - name: 📤 Resultado de desinstalación con Helm
-      debug:
-        msg: "{{ helm_uninstall.stdout | default(helm_uninstall.stderr) }}"
+  - debug:
+      msg: "{{ helm_uninstall.stdout | default(helm_uninstall.stderr) }}"
 
-    #####################################################################
-    # 3. Eliminar recursos Kubernetes personalizados
-    #####################################################################
-    - name: 🗑️ Eliminar PVCs, SealedSecrets, IngressRoute, Middleware, Secret TLS
-      shell: |
-        kubectl delete pvc -l app.kubernetes.io/instance={{ jenkins_release_name }} -n {{ helm_namespace }} || true
-        kubectl delete sealedsecret -l app.kubernetes.io/instance={{ jenkins_release_name }} -n {{ helm_namespace }} || true
-        kubectl delete ingressroute -l app.kubernetes.io/instance={{ jenkins_release_name }} -n {{ helm_namespace }} || true
-        kubectl delete middleware {{ jenkins_middleware_name }} -n {{ helm_namespace }} || true
-        kubectl delete secret {{ tls_secret_name }} -n {{ helm_namespace }} || true
-      register: extra_resources
-      changed_when: "'deleted' in extra_resources.stdout"
-      failed_when: false
+  #####################################################################
+  # 2. Eliminar recursos residuales (PVC, SealedSecret, IngressRoute…)
+  #####################################################################
+  - name: 🗑️  Eliminar recursos personalizados
+    shell: |
+      {{ kubectl_path }} -n {{ helm_namespace }} delete pvc \
+        -l app.kubernetes.io/instance={{ jenkins_release_name }} --ignore-not-found
+      {{ kubectl_path }} -n {{ helm_namespace }} delete sealedsecret \
+        -l app.kubernetes.io/instance={{ jenkins_release_name }} --ignore-not-found
+      {{ kubectl_path }} -n {{ helm_namespace }} delete ingressroute \
+        -l app.kubernetes.io/instance={{ jenkins_release_name }} --ignore-not-found
+      {{ kubectl_path }} -n {{ helm_namespace }} delete middleware {{ jenkins_middleware_name }} --ignore-not-found
+      {{ kubectl_path }} -n {{ helm_namespace }} delete secret {{ tls_secret_name }} --ignore-not-found
+    register: extra_resources
+    changed_when: "'deleted' in extra_resources.stdout"
 
-    - name: 📤 Resultado de eliminación de recursos personalizados
-      debug:
-        msg: "{{ extra_resources.stdout }}"
+  - debug:
+      msg: "{{ extra_resources.stdout }}"
 
-    #####################################################################
-    # 4. Eliminar namespace si quedó vacío
-    #####################################################################
-    - name: 🧨 Eliminar namespace '{{ helm_namespace }}' si quedó vacío
-      shell: |
-        kubectl get ns {{ helm_namespace }} &>/dev/null \
-        && kubectl delete ns {{ helm_namespace }} || echo "Namespace no existe"
-      register: ns_delete
-      changed_when: "'deleted' in ns_delete.stdout"
-      failed_when: false
+  #####################################################################
+  # 3. Eliminar el namespace si quedó vacío
+  #####################################################################
+  - name: 🗑️  Eliminar namespace '{{ helm_namespace }}' (si está vacío)
+    shell: |
+      {{ kubectl_path }} get ns {{ helm_namespace }} &>/dev/null \
+        && {{ kubectl_path }} delete ns {{ helm_namespace }} \
+        || echo "Namespace no existe"
+    register: ns_delete
+    changed_when: "'deleted' in ns_delete.stdout"
 
-    - name: 📤 Resultado de eliminación del namespace
-      debug:
-        msg: "{{ ns_delete.stdout }}"
+  - debug:
+      msg: "{{ ns_delete.stdout }}"
 
-    #####################################################################
-    # 5. Confirmación final
-    #####################################################################
-    - name: ✅ Verificar si el namespace fue eliminado
-      shell: kubectl get ns {{ helm_namespace }} 2>/dev/null || echo ""
-      register: ns_check
-      changed_when: false
+  - name: ✅ Confirmar eliminación total
+    shell: {{ kubectl_path }} get ns {{ helm_namespace }} 2>/dev/null || true
+    register: ns_check
+    changed_when: false
 
-    - name: 🎉 Confirmación de eliminación completa
-      debug:
-        msg: "✅ Jenkins y el namespace '{{ helm_namespace }}' fueron eliminados completamente."
-      when: ns_check.stdout == ""
-
-    - name: ⚠️ Advertencia si el namespace aún existe
-      debug:
-        msg: "⚠️ El namespace '{{ helm_namespace }}' aún existe. Verifica recursos colgantes o permisos."
-      when: ns_check.stdout != ""
+  - debug:
+      msg: "Jenkins y el namespace '{{ helm_namespace }}' fueron eliminados completamente."
+    when: ns_check.stdout == ""
