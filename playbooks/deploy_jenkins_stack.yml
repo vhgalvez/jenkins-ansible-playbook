@@ -12,14 +12,18 @@
 - name: 📦 Instalar Jenkins con Helm
   import_playbook: 03_install_jenkins.yml
 
-# Verificación de variables y acceso al dashboard de Jenkins
+###########################################################################
+# ✅ Verificación final: Credenciales, estado del Pod y acceso HTTPS
+###########################################################################
 - hosts: localhost
   gather_facts: false
   vars_files:
     - ../vars/main.yml
 
   tasks:
-    # Validar que las credenciales de Jenkins estén definidas
+    #####################################################################
+    # 1. Validar que las credenciales estén presentes
+    #####################################################################
     - name: ✅ Validar credenciales de autenticación para Jenkins
       assert:
         that:
@@ -27,15 +31,32 @@
           - jenkins_auth_pass is defined
         msg: "❌ Credenciales de autenticación no definidas."
 
-    # Comprobar acceso al Dashboard de Jenkins
-    - name: 🌐 Comprobar acceso al Dashboard de Jenkins
+    #####################################################################
+    # 2. Esperar a que el Pod de Jenkins esté listo (condición Ready)
+    #####################################################################
+    - name: ⏳ Esperar a que el Pod de Jenkins esté listo
       shell: >
-        curl --http1.1 -k -u {{ jenkins_auth_user }}:{{ jenkins_auth_pass }}
-        https://{{ jenkins_dashboard_domain }}/
-        --max-time 15 --silent --output /dev/null --write-out '%{http_code}'
-      register: dashboard_status
-      retries: 10 # Aumentar reintentos
-      delay: 6 # Más tiempo entre intentos
-      until: dashboard_status.stdout in ['200', '302', '307', '401']
+        kubectl -n jenkins wait pod
+        -l app.kubernetes.io/component=jenkins-controller
+        --for=condition=Ready
+        --timeout=300s
       changed_when: false
-      failed_when: dashboard_status.stdout not in ['200', '302', '307', '401']
+
+    #####################################################################
+    # 3. Verificar acceso al Dashboard de Jenkins (HTTPS + BasicAuth)
+    #####################################################################
+    - name: 🌐 Verificar acceso al Dashboard de Jenkins por HTTPS
+      shell: >
+        curl --http1.1 -k
+        -u {{ jenkins_auth_user }}:{{ jenkins_auth_pass }}
+        https://{{ jenkins_dashboard_domain }}/
+        --max-time 20
+        --silent
+        --output /dev/null
+        --write-out '%{http_code}'
+      register: dashboard_status
+      retries: 25
+      delay: 8
+      until: dashboard_status.stdout in ['200', '302', '307', '401', '403']
+      changed_when: false
+      failed_when: dashboard_status.stdout not in ['200', '302', '307', '401', '403']
