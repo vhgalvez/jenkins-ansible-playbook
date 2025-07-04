@@ -1,4 +1,4 @@
-# templates\jenkins-dashboard-ingressroute.yaml.j2
+# templates/jenkins-dashboard-ingressroute.yaml.j2
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -21,7 +21,11 @@ spec:
         - name: jenkins
           port: 8080
           scheme: http
-      middlewares: # liga el Middleware básico
+      middlewares:
         - name: {{ jenkins_middleware_name }}
+{% if http_to_https_redirect | default(false) %}
+        - name: default-redirectscheme
+          namespace: kube-system
+{% endif %}
   tls:
     secretName: {{ tls_secret_name }}

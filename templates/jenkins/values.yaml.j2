@@ -4,35 +4,21 @@ controller:
   servicePort: 8080
   targetPort: 8080
 
+  # ❌ Desactivamos el Ingress nativo del chart (usamos IngressRoute separado)
   ingress:
-    enabled: true
-    ingressClassName: traefik
-    hostName: "{{ jenkins_dashboard_domain }}"
-    annotations:
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
-      traefik.ingress.kubernetes.io/router.tls: "true"
-      traefik.ingress.kubernetes.io/auth-type: basic
-      traefik.ingress.kubernetes.io/auth-secret: "{{ jenkins_secret_name }}"
-{% if http_to_https_redirect | default(false) %}
-      traefik.ingress.kubernetes.io/router.middlewares: default-redirectscheme@kubernetescrd
-{% endif %}
-    paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: jenkins
-            port:
-              number: 8080
+    enabled: false
 
-  # evita el asistente y espera plugins antes de JCasC
+  # Evita el asistente de instalación
   initContainerEnv:
     - name: JAVA_OPTS
       value: "-Djenkins.install.runSetupWizard=false"
 
+  # No recargar config automáticamente
   sidecars:
-    configAutoReload: { enabled: false }
+    configAutoReload:
+      enabled: false
 
+  # Esperar a que los plugins estén listos antes de JCasC
   initContainers:
     - name: plugin-init
       image: jenkins/jenkins:2.504.3-jdk21
@@ -45,6 +31,7 @@ controller:
         - name: jenkins-home
           mountPath: /var/jenkins_home
 
+  # Configuración de seguridad (JCasC)
   JCasC:
     enabled: true
     configScripts:
@@ -60,6 +47,7 @@ controller:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
 
+  # Plugins fijos
   installPlugins:
     - kubernetes:4358.vcfd9c5a_0a_f51
     - kubernetes-client-api:6.15.0-550.v2229d7b_220d1
@@ -70,9 +58,11 @@ controller:
     - matrix-auth:3.3
   overwritePlugins: true
 
+  # Recursos del Pod
   resources:
     requests: { cpu: 200m, memory: 512Mi }
     limits:   { cpu: "2",  memory: 4Gi }
 
-# Descomenta si no usarás agentes Kubernetes
-# agent: { enabled: false }
+# ❗ Descomenta si NO vas a usar agentes Kubernetes
+# agent:
+#   enabled: false
