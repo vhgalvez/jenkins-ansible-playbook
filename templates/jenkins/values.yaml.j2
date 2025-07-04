@@ -1,11 +1,8 @@
 # templates\jenkins\values.yaml.j2
-
-# ────────────────────────────────────────────────────────────────────────────────
-# Jenkins Helm Chart custom values
-# Tested with chart 5.8.63  –  Jenkins 2.504.3-jdk21
-# ────────────────────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────────────────────
+# Jenkins Helm chart values | probado con chart 5.8.63 (Jenkins 2.504.3-jdk21)
+# ───────────────────────────────────────────────────────────────────────────────
 controller:
-  # Servicio interno de Kubernetes
   serviceType: ClusterIP
   servicePort: 8080
   targetPort: 8080
@@ -18,16 +15,13 @@ controller:
     ingressClassName: traefik
     hostName: "{{ jenkins_dashboard_domain }}"
     annotations:
-      # entrypoint + TLS
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
       traefik.ingress.kubernetes.io/router.tls: "true"
-      # Auth básica
       traefik.ingress.kubernetes.io/auth-type: basic
       traefik.ingress.kubernetes.io/auth-secret: "{{ jenkins_secret_name }}"
-      # (opcional) Forzar redirección → HTTPS
-      {% if http_to_https_redirect | default(false) %}
+{% if http_to_https_redirect | default(false) %}
       traefik.ingress.kubernetes.io/router.middlewares: default-redirectscheme@kubernetescrd
-      {% endif %}
+{% endif %}
     paths:
       - path: /
         pathType: Prefix
@@ -38,13 +32,15 @@ controller:
               number: 8080
 
   # ---------------------------------------------------------------------------
-  # Probes - dejamos los valores por defecto del chart, que ya están afinados.
-  # Solo descomentamos si realmente hace falta cambiarlos.
+  # (Opcional) probes: deja los valores por defecto del chart
   # ---------------------------------------------------------------------------
-  healthProbes: true
+  # healthProbes:
+  #   livenessProbe: …
+  #   readinessProbe: …
+  #   startupProbe: …
 
   # ---------------------------------------------------------------------------
-  # Configuration-as-Code (solo bloque de seguridad, el resto lo genera el chart)
+  # Configuration-as-Code (solo bloque de seguridad)
   # ---------------------------------------------------------------------------
   JCasC:
     enabled: true
@@ -62,21 +58,20 @@ controller:
               allowAnonymousRead: false
 
   # ---------------------------------------------------------------------------
-  # Plugins – lista **completa y con versiones fijas**.
-  # Incluye kubernetes y su API-client para evitar el BootFailure.
+  # Plugins (versiones fijas para evitar incompatibilidades)
   # ---------------------------------------------------------------------------
   installPlugins:
-    - kubernetes:4358.vcfd9c5a_0a_f51          # Cloud agents
+    - kubernetes:4358.vcfd9c5a_0a_f51
     - kubernetes-client-api:6.15.0-550.v2229d7b_220d1
-    - workflow-aggregator:608.v67378e9d3db_1   # Pipeline
+    - workflow-aggregator:608.v67378e9d3db_1
     - configuration-as-code:1971.vf9280461ea_89
     - git:5.7.0
     - credentials:1311.vcf0a_474e4f29
     - matrix-auth:3.3
-  overwritePlugins: true                        # Fuerza las versiones indicadas
+  overwritePlugins: true
 
   # ---------------------------------------------------------------------------
-  # Recursos (puedes ajustarlos según tus nodos)
+  # Recursos (ajusta a tu clúster)
   # ---------------------------------------------------------------------------
   resources:
     requests:
@@ -87,12 +82,7 @@ controller:
       memory: 4Gi
 
 # ------------------------------------------------------------------------------
-# Opcional: desactiva el _cloud_ si NO vas a lanzar agentes sobre Kubernetes.
+# Si NO vas a lanzar agentes en Kubernetes, descomenta para deshabilitarlos
 # agent:
 #   enabled: false
-# ------------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
-# Persistance: se heredan los valores por defecto (PVC dinámico de 8 Gi)
-# Si usas Longhorn o similar, ajusta aquí la storageClass.
 # ------------------------------------------------------------------------------
