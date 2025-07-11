@@ -1,5 +1,9 @@
 # vars/main.yml
 
+# 🔐 Docker Hub
+dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') }}"
+dockerhub_token: "{{ lookup('env', 'DOCKERHUB_TOKEN') }}"
+
 # 🔐 Credenciales de autenticación básica para Jenkins
 jenkins_auth_user: "{{ lookup('env', 'JENKINS_AUTH_USER') }}"
 jenkins_auth_pass: "{{ lookup('env', 'JENKINS_AUTH_PASS') }}"
