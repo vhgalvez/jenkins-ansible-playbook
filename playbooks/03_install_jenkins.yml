@@ -38,16 +38,6 @@
         executable: /bin/bash
       when: traefik_crd_check.stdout == ""
 
-    # (Opcional) Instalar Traefik si no lo tienes
-    # - name: 🚀 Instalar Traefik (opcional)
-    #   shell: |
-    #     helm upgrade --install traefik traefik/traefik \
-    #       --namespace kube-system \
-    #       --create-namespace=false \
-    #       --values ../templates/traefik-values.yaml
-    #   args:
-    #     executable: /bin/bash
-
     # ──────────────────────────────
     # JENKINS
     # ──────────────────────────────
