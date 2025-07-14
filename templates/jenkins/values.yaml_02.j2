@@ -16,16 +16,6 @@ controller:
 
   # --- Variables de entorno para credenciales desde Secrets Kubernetes -----
   containerEnv:
-    - name: JENKINS_ADMIN_USER
-      valueFrom:
-        secretKeyRef:
-          name: jenkins-admin
-          key: jenkins-admin-user
-    - name: JENKINS_ADMIN_PASSWORD_HASH
-      valueFrom:
-        secretKeyRef:
-          name: jenkins-admin
-          key: jenkins-admin-password
     - name: DOCKERHUB_USERNAME
       valueFrom:
         secretKeyRef:
