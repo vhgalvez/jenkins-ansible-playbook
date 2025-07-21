@@ -5,6 +5,7 @@
 - import_playbook: 01_generate-auth-secret.yml
 - import_playbook: 02_render_and_apply_jenkins_ingress.yml
 - import_playbook: 03_install_jenkins.yml
+- import_playbook: 04_create_secrets.yml
 
 ###########################################################################
 # ✅ Verificación final: Credenciales, estado del Pod y acceso HTTPS
