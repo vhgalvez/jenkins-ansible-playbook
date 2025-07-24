@@ -84,7 +84,6 @@ controller:
                 jenkinsUrl: "http://{{ .Release.Name }}:8080"
                 jenkinsTunnel: "{{ .Release.Name }}-agent:50000"
                 templates:
-                  # ▸ Plantilla por defecto (usada por fallback o pruebas)
                   - name: "default"
                     label: "default"
                     idleMinutes: 1
@@ -106,7 +105,6 @@ controller:
                           secretName: "dockerhub-config"
                           mountPath: "/kaniko/.docker"
 
-                  # ▸ Plantilla especializada para GitOps (uso por Jenkinsfile)
                   - name: "gitops-agent"
                     label: "gitops-agent"
                     idleMinutes: 1
@@ -133,7 +131,6 @@ controller:
                           secretName: "dockerhub-config"
                           mountPath: "/kaniko/.docker"
 
-  # ▸ Plugins requeridos (idénticos a entorno local)
   installPlugins:
     - kubernetes
     - workflow-aggregator
@@ -149,7 +146,6 @@ controller:
     - role-strategy
   overwritePlugins: true
 
-  # ▸ Recursos mínimos y límites
   resources:
     requests:
       cpu: 200m
@@ -158,9 +154,6 @@ controller:
       cpu: "2"
       memory: 4Gi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Persistencia – almacenamiento persistente para el workspace Jenkins
-# ════════════════════════════════════════════════════════════════════════════
 persistence:
   enabled: true
   storageClass: "{{ .Values.global.storageClass | default 'gp2' }}"
