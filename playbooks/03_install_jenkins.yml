@@ -10,14 +10,11 @@
     KUBECONFIG: "{{ kubeconfig_path }}"
 
   tasks:
-
     - name: ✅ Confirmar carga de variables
       debug:
         msg: "✅ Variables cargadas correctamente."
 
-    # ──────────────────────────────
-    # TRAEFIK CRDs (traefik-crds)
-    # ──────────────────────────────
+    # ──────────────── TRAEFIK CRDs ────────────────
     - name: ➕ Añadir repositorio de Helm para Traefik
       kubernetes.core.helm_repository:
         name: traefik
@@ -38,17 +35,16 @@
         executable: /bin/bash
       when: traefik_crd_check.stdout == ""
 
-    # ──────────────────────────────
-    # JENKINS
-    # ──────────────────────────────
+    # ──────────────── JENKINS ────────────────
     - name: 📝 Renderizar values.yaml.j2 de Jenkins
       template:
         src: ../templates/jenkins/values.yaml.j2
-        dest: /tmp/values.yaml
+        dest: ../templates/jenkins/values.yaml
 
     - name: 📦 Crear namespace Jenkins si no existe
       shell: |
-        kubectl get namespace {{ jenkins_namespace }} || kubectl create namespace {{ jenkins_namespace }}
+        kubectl get namespace {{ jenkins_namespace }} || \
+        kubectl create namespace {{ jenkins_namespace }}
       args:
         executable: /bin/bash
 
@@ -63,7 +59,7 @@
         helm upgrade --install {{ jenkins_release_name }} jenkins/jenkins \
           --namespace {{ helm_namespace }} \
           --create-namespace=false \
-          --values /tmp/values.yaml \
+          --values ../templates/jenkins/values.yaml \
           --version {{ jenkins_chart_version }}
       args:
         executable: /bin/bash
