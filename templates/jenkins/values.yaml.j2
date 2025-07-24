@@ -1,8 +1,8 @@
 # templates/jenkins/values.yaml.j2
 # ─────────────────────────────────────────────────────────────────────────────
-# Jenkins Helm values — ENTORNO PRODUCCIÓN
+# Jenkins Helm values — ENTORNO PRODUCCIÓN
 # ▸ Usa los mismos agentes (Node‑18 + Kaniko) que en local
-# ▸ Credenciales gestionadas vía Secrets de Kubernetes (ver 04_create_secrets.yml)
+# ▸ Credenciales gestionadas vía Secrets de Kubernetes (ver 04_create_secrets.yml)
 # ▸ Preparado para CI/CD con GitHub y DockerHub
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -21,7 +21,7 @@ controller:
   ingress:
     enabled: false
 
-  # ▸ Variables de entorno para plugins (credentials-binding, etc.)
+  # ▸ Variables de entorno para plugins (credentials‑binding, etc.)
   containerEnv:
     - name: DOCKERHUB_USERNAME
       valueFrom:
