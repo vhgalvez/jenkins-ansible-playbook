@@ -1,8 +1,8 @@
 # templates/jenkins/values.yaml.j2
 # ─────────────────────────────────────────────────────────────────────────────
-# Jenkins Helm values — ENTORNO PRODUCCIÓN
+# Jenkins Helm values — ENTORNO PRODUCCIÓN
 # ▸ Usa los mismos agentes (Node‑18 + Kaniko) que en local
-# ▸ Credenciales gestionadas vía Secrets de Kubernetes (ver 04_create_secrets.yml)
+# ▸ Credenciales gestionadas vía Secrets de Kubernetes (ver 04_create_secrets.yml)
 # ▸ Preparado para CI/CD con GitHub y DockerHub
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -21,7 +21,7 @@ controller:
   ingress:
     enabled: false
 
-  # ▸ Variables de entorno para plugins (credentials‑binding, etc.)
+  # ▸ Variables de entorno para plugins (credentials-binding, etc.)
   containerEnv:
     - name: DOCKERHUB_USERNAME
       valueFrom:
@@ -40,7 +40,7 @@ controller:
           key: token
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # JCasC – Configuration as Code
+  # JCasC – Configuration as Code
   # ═══════════════════════════════════════════════════════════════════════════
   JCasC:
     enabled: true
@@ -66,12 +66,12 @@ controller:
                       id: dockerhub-credentials
                       username: "${DOCKERHUB_USERNAME}"
                       password: "${DOCKERHUB_TOKEN}"
-                      description: DockerHub token for CI/CD
+                      description: DockerHub token for CI/CD
                   - usernamePassword:
                       id: github-ci-token
                       username: dummy
                       password: "${GITHUB_TOKEN}"
-                      description: GitHub token for CI/CD jobs
+                      description: GitHub token for CI/CD jobs
 
       03-kubernetes-cloud.yaml: |
         jenkins:
@@ -85,7 +85,7 @@ controller:
                 jenkinsTunnel: {{ .Release.Name }}-agent:50000
                 templates:
 
-                  # ▸ Agente por defecto
+                  # ▸ Agente por defecto
                   - name: default
                     label: default
                     idleMinutes: 1
@@ -99,11 +99,15 @@ controller:
                         command: /busybox/cat
                         ttyEnabled: true
                         envVars:
-                          - envVar: { key: DOCKER_CONFIG , value: /kaniko/.docker }
+                          - envVar:
+                              key: DOCKER_CONFIG
+                              value: /kaniko/.docker
                     volumes:
-                      - secretVolume: { secretName: dockerhub-config , mountPath: /kaniko/.docker }
+                      - secretVolume:
+                          secretName: dockerhub-config
+                          mountPath: /kaniko/.docker
 
-                  # ▸ Agente especializado para GitOps
+                  # ▸ Agente especializado para GitOps
                   - name: gitops-agent
                     label: gitops-agent
                     idleMinutes: 1
@@ -122,11 +126,15 @@ controller:
                         command: /busybox/cat
                         ttyEnabled: true
                         envVars:
-                          - envVar: { key: DOCKER_CONFIG , value: /kaniko/.docker }
+                          - envVar:
+                              key: DOCKER_CONFIG
+                              value: /kaniko/.docker
                     volumes:
-                      - secretVolume: { secretName: dockerhub-config , mountPath: /kaniko/.docker }
+                      - secretVolume:
+                          secretName: dockerhub-config
+                          mountPath: /kaniko/.docker
 
-  # ▸ Plugins necesarios
+  # ▸ Plugins necesarios
   installPlugins:
     - kubernetes
     - workflow-aggregator
@@ -142,7 +150,7 @@ controller:
     - role-strategy
   overwritePlugins: true
 
-  # ▸ Recursos
+  # ▸ Recursos
   resources:
     requests:
       cpu: 200m
@@ -152,7 +160,7 @@ controller:
       memory: 4Gi
 
 # ════════════════════════════════════════════════════════════════════════════
-# Persistencia – volumen para JENKINS_HOME
+# Persistencia – volumen para JENKINS_HOME
 # ════════════════════════════════════════════════════════════════════════════
 persistence:
   enabled: true
