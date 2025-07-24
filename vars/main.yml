@@ -46,3 +46,4 @@ jenkins_release_name: "jenkins" # Solo una vez
 jenkins_values_template: "values.yaml.j2"
 jenkins_ingress_host: "jenkins.socialdevs.site"
 helm_namespace: jenkins
+jenkins_storage_class: longhorn

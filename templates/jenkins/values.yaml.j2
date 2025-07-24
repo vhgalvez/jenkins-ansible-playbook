@@ -1,4 +1,3 @@
-# templates/jenkins/values.yaml.j2
 # ─────────────────────────────────────────────────────────────
 # Jenkins Helm values — ENTORNO PRODUCCIÓN
 # ─────────────────────────────────────────────────────────────
@@ -18,7 +17,6 @@ controller:
   ingress:
     enabled: false
 
-  # ▸ Variables de entorno para plugins (credentials‑binding, etc.)
   containerEnv:
     - name: DOCKERHUB_USERNAME
       valueFrom:
@@ -36,9 +34,6 @@ controller:
           name: github-ci-token
           key: token
 
-  # ════════════════════════════════════════════════════════
-  # JCasC – Configuration as Code
-  # ════════════════════════════════════════════════════════
   JCasC:
     enabled: true
     configScripts:
@@ -78,7 +73,6 @@ controller:
                 serverUrl: https://kubernetes.default
                 skipTlsVerify: true
                 namespace: jenkins
-                # ⬇️ Escapamos las plantillas de Helm para que Jinja NO las procese
                 jenkinsUrl: "{% raw %}http://{{ .Release.Name }}:8080{% endraw %}"
                 jenkinsTunnel: "{% raw %}{{ .Release.Name }}-agent:50000{% endraw %}"
                 templates:
@@ -129,7 +123,6 @@ controller:
                           secretName: dockerhub-config
                           mountPath: /kaniko/.docker
 
-  # ▸ Plugins necesarios
   installPlugins:
     - kubernetes
     - workflow-aggregator
@@ -145,7 +138,6 @@ controller:
     - role-strategy
   overwritePlugins: true
 
-  # ▸ Recursos
   resources:
     requests:
       cpu: 200m
@@ -157,8 +149,12 @@ controller:
 # ════════════════════════════════════════════════════════
 # Persistencia – volumen para JENKINS_HOME
 # ════════════════════════════════════════════════════════
+# 🔸 1) clave global para cualquier plantilla de la chart
+global:
+  storageClass: "{{ jenkins_storage_class | default('gp2') }}"
+
+# 🔸 2) clave concreta que usa home-pvc.yaml
 persistence:
   enabled: true
-  # ⬇️ También escapamos la plantilla Helm con raw
-  storageClass: "{% raw %}{{ .Values.global.storageClass | default \"gp2\" }}{% endraw %}"
+  storageClass: "{{ jenkins_storage_class | default('gp2') }}"
   size: 8Gi
