@@ -1,13 +1,11 @@
 # vars/main.yml
 
-
 # 🔐 Credenciales de autenticación para Docker Hub
-dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') }}"
-dockerhub_token: "{{ lookup('env', 'DOCKERHUB_TOKEN') }}"
+dockerhub_username: "{{ DOCKERHUB_USERNAME }}"
+dockerhub_token: "{{ DOCKERHUB_TOKEN }}"
 
 # 🔐 Token de acceso a GitHub
-github_token: "{{ lookup('env', 'GITHUB_TOKEN') }}"
-
+github_token: "{{ GITHUB_TOKEN }}"
 
 # 🔐 Credenciales de autenticación básica para Jenkins
 jenkins_auth_user: "{{ lookup('env', 'JENKINS_AUTH_USER') }}"
@@ -25,7 +23,7 @@ jenkins_namespace: jenkins
 
 # 🔒 Nombres de Middleware y Secret sellado para Jenkins
 jenkins_middleware_name: jenkins-dashboard-auth
-jenkins_secret_name: jenkins-dashboard-auth-secret  # Aquí está correctamente asignado
+jenkins_secret_name: jenkins-dashboard-auth-secret # Aquí está correctamente asignado
 
 # 🔐 TLS: Secret con certificado wildcard
 tls_secret_name: wildcard-socialdevs-tls
@@ -44,7 +42,7 @@ http_to_https_redirect: true
 
 # 📦 Helm
 jenkins_chart_version: "5.8.63"
-jenkins_release_name: "jenkins"  # Solo una vez
+jenkins_release_name: "jenkins" # Solo una vez
 jenkins_values_template: "values.yaml.j2"
 jenkins_ingress_host: "jenkins.socialdevs.site"
 helm_namespace: jenkins
