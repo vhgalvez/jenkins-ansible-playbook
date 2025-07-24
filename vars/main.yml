@@ -1,49 +1,42 @@
 # vars/main.yml
+# ──────────────────────────────────────────────────────────
+# Variables para el despliegue de Jenkins
 
-# 🔐 Credenciales de autenticación para Docker Hub
-dockerhub_username: "{{ DOCKERHUB_USERNAME }}"
-dockerhub_token: "{{ DOCKERHUB_TOKEN }}"
+# 🔐 Docker Hub
+dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') }}"
+dockerhub_token:    "{{ lookup('env', 'DOCKERHUB_TOKEN') }}"
 
-# 🔐 Token de acceso a GitHub
-github_token: "{{ GITHUB_TOKEN }}"
+# 🔐 GitHub
+github_token: "{{ lookup('env', 'GITHUB_TOKEN') }}"
 
-# 🔐 Credenciales de autenticación básica para Jenkins
+# 🔐 Jenkins basic‑auth (Traefik)
 jenkins_auth_user: "{{ lookup('env', 'JENKINS_AUTH_USER') }}"
 jenkins_auth_pass: "{{ lookup('env', 'JENKINS_AUTH_PASS') }}"
 
-# 🛠️ Credenciales de autenticación para la interfaz de usuario de Jenkins web
+# 🔐 Jenkins UI account
 jenkins_auth_user_ui: "{{ lookup('env', 'JENKINS_AUTH_USER_UI') }}"
 jenkins_auth_pass_ui: "{{ lookup('env', 'JENKINS_AUTH_PASS_UI') }}"
 
-# 🌐 Dominio de acceso al Dashboard de Jenkins
+# 🌐 Dominio público
 jenkins_dashboard_domain: jenkins.socialdevs.site
 
-# 🧩 Namespace donde se desplegará Jenkins
-jenkins_namespace: jenkins
-
-# 🔒 Nombres de Middleware y Secret sellado para Jenkins
+# 🧩 Kubernetes
+jenkins_namespace:   jenkins
+tls_secret_name:     wildcard-socialdevs-tls
 jenkins_middleware_name: jenkins-dashboard-auth
-jenkins_secret_name: jenkins-dashboard-auth-secret # Aquí está correctamente asignado
-
-# 🔐 TLS: Secret con certificado wildcard
-tls_secret_name: wildcard-socialdevs-tls
-
-# 🧰 Herramientas CLI y rutas de autenticación
-kubeconfig_path: "/home/victory/.kube/config"
-kubeconfig_token_path: "/home/victory/.kube/token.jwt"
-kubectl_path: "/usr/local/bin/kubectl"
-kubeseal_path: "/usr/local/bin/kubeseal"
-
-# 💡 Dirección VIP del clúster Kubernetes
-vip_kubernetes: "192.168.0.32"
-
-# 🌐 Redirección HTTP → HTTPS
-http_to_https_redirect: true
+jenkins_secret_name:     jenkins-dashboard-auth-secret
 
 # 📦 Helm
+helm_namespace:        jenkins
+jenkins_release_name:  jenkins
 jenkins_chart_version: "5.8.63"
-jenkins_release_name: "jenkins" # Solo una vez
-jenkins_values_template: "values.yaml.j2"
-jenkins_ingress_host: "jenkins.socialdevs.site"
-helm_namespace: jenkins
-jenkins_storage_class: longhorn
+
+# 📂 StorageClass que **sí existe** en tu clúster
+jenkins_storage_class: longhorn          # cámbialo si usas otro SC
+
+# 🛠️ Rutas CLI
+kubeconfig_path: "/home/victory/.kube/config"
+kubectl_path:    "/usr/local/bin/kubectl"
+kubeseal_path:   "/usr/local/bin/kubeseal"
+vip_kubernetes:  "192.168.0.32"
+http_to_https_redirect: true
