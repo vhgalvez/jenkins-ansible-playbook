@@ -18,7 +18,7 @@ controller:
   ingress:
     enabled: false
 
-  # ▸ Variables de entorno para plugins (credentials - binding, etc.)
+  # ▸ Variables de entorno para plugins
   containerEnv:
     - name: DOCKERHUB_USERNAME
       valueFrom: { secretKeyRef: { name: dockerhub-credentials , key: username } }
@@ -27,9 +27,12 @@ controller:
     - name: GITHUB_TOKEN
       valueFrom: { secretKeyRef: { name: github-ci-token , key: token } }
 
-  # ════════════════════════════════════════════════════════
-  # JCasC - Configuration as Code
-  # ════════════════════════════════════════════════════════
+  # ▸ Seguridad para el contenedor de inicialización (init)
+  initContainerSecurityContext:
+    runAsUser: 0
+    allowPrivilegeEscalation: false
+
+  # ▸ Configuración as Code (JCasC)
   JCasC:
     enabled: true
     configScripts:
@@ -69,11 +72,9 @@ controller:
                 serverUrl: https://kubernetes.default
                 skipTlsVerify: true
                 namespace: jenkins
-                # Escapamos plantillas Helm dentro de Jinja
                 jenkinsUrl: "{% raw %}http://{{ .Release.Name }}:8080{% endraw %}"
                 jenkinsTunnel: "{% raw %}{{ .Release.Name }}-agent:50000{% endraw %}"
                 templates:
-                  # Agente por defecto
                   - name: default
                     label: default
                     idleMinutes: 1
@@ -88,7 +89,6 @@ controller:
                     volumes:
                       - secretVolume: { secretName: dockerhub-config , mountPath: /kaniko/.docker }
 
-                  # ▸ Agente especializado para GitOps
                   - name: gitops-agent
                     label: gitops-agent
                     idleMinutes: 1
@@ -108,7 +108,6 @@ controller:
                     volumes:
                       - secretVolume: { secretName: dockerhub-config , mountPath: /kaniko/.docker }
 
-  # ▸Plugins necesarios
   installPlugins:
     - kubernetes
     - workflow-aggregator
@@ -124,7 +123,6 @@ controller:
     - role-strategy
   overwritePlugins: true
 
-  # ▸Recursos
   resources:
     requests: { cpu: 200m , memory: 512Mi }
     limits:   { cpu: "2" , memory: 4Gi }
@@ -133,12 +131,12 @@ controller:
 # Persistencia - volumen para JENKINS_HOME
 # ════════════════════════════════════════════════════════
 
-# 1) clave global que usan varias plantillas del chart
+# 1) clave global usada por plantillas tpl del chart
 global:
   storageClass: "{{ jenkins_storage_class | default('gp2') }}"
 
-# 2) clave concreta que usa home-pvc.yaml
+# 2) clave usada por templates/home-pvc.yaml
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class | default('gp2') }}"
-  size: 8Gi
+  size: 20Gi
