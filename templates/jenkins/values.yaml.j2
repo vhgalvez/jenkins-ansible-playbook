@@ -128,7 +128,7 @@ controller:
     limits:   { cpu: "2" , memory: 4Gi }
 
 # ════════════════════════════════════════════════════════
-# Persistencia - volumen para JENKINS_HOME
+# Persistencia  volumen para JENKINS_HOME
 # ════════════════════════════════════════════════════════
 
 # 1) clave global usada por plantillas tpl del chart
@@ -139,4 +139,6 @@ global:
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class | default('gp2') }}"
-  size: 20Gi
+  size: 8Gi
+  annotations:
+    longhorn.io/replica-count: "1"
