@@ -12,17 +12,18 @@
 - import_playbook: 04_install_jenkins.yml
 
 ###########################################################################
-# ✅ Verificación final: Carga de credenciales + Validación del estado
+# ✅ Verificación final
 ###########################################################################
-
 - hosts: localhost
   gather_facts: false
-
   tasks:
-    - name: 📥 Cargar .env como variables
-      ansible.builtin.include_vars:
-        file: "{{ playbook_dir }}/../.env"
-        dotenv: true
+    - name: 📥 Cargar .env como variables (si existe)
+      shell: |
+        if [ -f "{{ playbook_dir }}/../.env" ]; then
+          set -a && . "{{ playbook_dir }}/../.env" && set +a
+        fi
+      changed_when: false
+      failed_when: false
 
 # Segunda parte: Validaciones usando esas variables y vars/main.yml
 - hosts: localhost

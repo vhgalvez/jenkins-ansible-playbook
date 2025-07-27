@@ -17,12 +17,12 @@ controller:
   ingress:
     enabled: false
 
-  # ENV vars desde Secrets
+  ############################################################
+  # ▸ Variables de entorno (se inyectan con envFrom)
+  ############################################################
   envFrom:
-    - secretRef:
-        name: dockerhub-credentials
-    - secretRef:
-        name: github-ci-token
+    - secretRef: { name: dockerhub-credentials }
+    - secretRef: { name: github-ci-token }
 
   podSecurityContext:
     fsGroup: 1000
@@ -35,13 +35,13 @@ controller:
     capabilities:
       drop: ["ALL"]
 
-  initContainerEnv:
-    - name: JENKINS_UC_DOWNLOAD
-      value: https://updates.jenkins.io
-
+  ############################################################
+  # ▸ JCasC
+  ############################################################
   JCasC:
     enabled: true
     configScripts:
+
       01-security.yaml: |
         jenkins:
           securityRealm:
@@ -68,7 +68,7 @@ controller:
                       id: github-ci-token
                       username: dummy
                       password: "${GITHUB_TOKEN}"
-                      description: GitHub token for CI/CD jobs
+                      description: GitHub PAT para pipelines
 
       03-kubernetes-cloud.yaml: |
         jenkins:
@@ -94,14 +94,13 @@ controller:
                         command: /busybox/cat
                         ttyEnabled: true
                         envVars:
-                          - envVar:
-                              key: DOCKER_CONFIG
-                              value: /kaniko/.docker
+                          - envVar: { key: DOCKER_CONFIG , value: /kaniko/.docker }
                     volumes:
-                      - secretVolume:
-                          secretName: dockerhub-config
-                          mountPath: /kaniko/.docker
+                      - secretVolume: { secretName: dockerhub-config , mountPath: /kaniko/.docker }
 
+  ############################################################
+  # ▸ Plugins + recursos
+  ############################################################
   installPlugins:
     - kubernetes
     - workflow-aggregator
@@ -115,17 +114,15 @@ controller:
     - plain-credentials
     - github-oauth
     - role-strategy
-
   overwritePlugins: true
 
   resources:
-    requests:
-      cpu: 200m
-      memory: 512Mi
-    limits:
-      cpu: "2"
-      memory: 4Gi
+    requests: { cpu: 200m , memory: 512Mi }
+    limits:   { cpu: "2" , memory: 4Gi }
 
+##############################################################
+# ▸ Persistencia jenkins_home (Longhorn)
+##############################################################
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
