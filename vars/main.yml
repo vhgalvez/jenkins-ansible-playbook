@@ -4,7 +4,7 @@
 
 # 🔐 Docker Hub
 dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') | default('', true) }}"
-dockerhub_token:    "{{ lookup('env', 'DOCKERHUB_TOKEN')    | default('', true) }}"
+dockerhub_token: "{{ lookup('env', 'DOCKERHUB_TOKEN')    | default('', true) }}"
 
 # 🔐 GitHub
 github_token: "{{ lookup('env', 'GITHUB_TOKEN') | default('', true) }}"
@@ -20,32 +20,27 @@ jenkins_auth_pass_ui: "{{ lookup('env', 'JENKINS_AUTH_PASS_UI') | default('', tr
 # 🔐 Jenkins admin secret (para Helm)
 jenkins_admin_secret_name: jenkins-admin
 
-
 # 🌐 Dominio público del dashboard
 jenkins_dashboard_domain: jenkins.socialdevs.site
 
 # 🧩 Kubernetes y certificados
-jenkins_namespace:         jenkins
-tls_secret_name:           wildcard-socialdevs-tls
-jenkins_middleware_name:   jenkins-dashboard-auth
-jenkins_secret_name:       jenkins-dashboard-auth-secret
+jenkins_namespace: jenkins
+tls_secret_name: wildcard-socialdevs-tls
+jenkins_middleware_name: jenkins-dashboard-auth
+jenkins_secret_name: jenkins-dashboard-auth-secret
 
 # 📦 Helm config
-helm_namespace:           jenkins
-jenkins_release_name:     jenkins
-jenkins_chart_version:    "5.8.63"
+helm_namespace: jenkins
+jenkins_release_name: jenkins
+jenkins_chart_version: "5.8.63"
 
 # 📂 StorageClass existente en el clúster (ej: Longhorn, local-path)
 jenkins_storage_class: longhorn
 
-# 📁 Plugins empaquetados desde un directorio local (.hpi)
-jenkins_plugins_path: "/home/victory/jenkins_plugins"       # Ruta real en tu host
-jenkins_plugins_configmap: "jenkins-plugins"                # Nombre del ConfigMap a crear
-
 # 🛠️ Paths CLI y configuración
 kubeconfig_path: "/home/victory/.kube/config"
-kubectl_path:    "/usr/local/bin/kubectl"
-kubeseal_path:   "/usr/local/bin/kubeseal"
+kubectl_path: "/usr/local/bin/kubectl"
+kubeseal_path: "/usr/local/bin/kubeseal"
 
 # 🌐 IP del cluster virtual (VIP o HAProxy externo)
 vip_kubernetes: "192.168.0.32"
