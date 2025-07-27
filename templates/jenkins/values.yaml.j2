@@ -1,67 +1,67 @@
 # ----------------------------------------------------------------------------- #
 #  templates/jenkins/values.yaml.j2                                             #
-#  Jenkins (Helm  >5.x) — Producción con Internet                               #
-#  ▸ Plugins: pre‑empaquetados en un ConfigMap, sin init‑container de descarga  #
-#  ▸ Variables obligatorias (vars/main.yml o --extra-vars):                     #
-#      jenkins_storage_class      → StorageClass existente (Longhorn, …)        #
-#      jenkins_plugins_configmap  → nombre del ConfigMap con *.hpi (opcional)   #
 # ----------------------------------------------------------------------------- #
 
+# Jenkins - Helm values (producción con Internet)
 controller:
   image:
     repository: jenkins/jenkins
     tag: "2.518-jdk21"
     pullPolicy: IfNotPresent
 
-  installWizard: false            # desactivar asistente inicial
-
-  # ───────────────────────────── 1. Plugins ──────────────────────────────
-  sidecars:
-    initContainer:                # instalador oficial de plugins
-      enabled: false              #  ⟵ lo desactivamos
-    configAutoReload:
-      enabled: true               #  ← mantiene CasC autoreload
-
-  installPlugins: []              # Helm NO descargará nada
+  installWizard: false
   overwritePlugins: true
 
-  # Montaje del ConfigMap con los plugins (.hpi)
-  extraVolumes:
-    - name: prepackaged-plugins
-      configMap:
-        name: "{{ jenkins_plugins_configmap | default('jenkins-prepackaged-plugins', true) }}"
-  extraVolumeMounts:
-    - name: prepackaged-plugins
-      mountPath: /usr/share/jenkins/ref/plugins      # ruta que inspecciona Jenkins
-      readOnly: true
+  # 1) Plugins que se instalarán en el primer arranque
+  installPlugins:
+    - kubernetes:4260.v1dd44f5b_1cf9
+    - workflow-aggregator
+    - git
+    - configuration-as-code
+    - credentials
+    - plain-credentials
+    - docker-workflow
+    - blueocean
+    - credentials-binding
+    - pipeline-stage-view
+    - github
+    - github-branch-source
+    - job-dsl
+    - matrix-auth
 
-  # ───────────────────────────── 2. Servicio ──────────────────────────────
-  serviceType: ClusterIP
-  servicePort: 8080
-  targetPort:  8080
-  ingress:
-    enabled: false    # Traefik IngressRoute se aplica por separado
+  sidecars:
+    initContainer:
+      enabled: true
+    configAutoReload:
+      enabled: true
 
-  # ───────────────────────────── 3. Env/Secrets ───────────────────────────
-  envFrom:
-    - secretRef: { name: dockerhub-credentials }
-    - secretRef: { name: github-ci-token }
+  # 2) Credenciales del administrador UI (Traefik, JCasC, etc.)
+  admin:
+    existingSecret: jenkins-admin
+    userKey: jenkins-admin-user
+    passwordKey: jenkins-admin-password
 
-  # ───────────────────────────── 4. SecurityContext ───────────────────────
-  podSecurityContext: { fsGroup: 1000 }
-  containerSecurityContext:
-    runAsUser:                1000
-    runAsGroup:               1000
-    readOnlyRootFilesystem:   false
-    allowPrivilegeEscalation: false
-    capabilities: { drop: ["ALL"] }
+  env:
+    JENKINS_ADMIN_USER: "${JENKINS_AUTH_USER_UI}"
+    JENKINS_ADMIN_PASSWORD_HASH: "${JENKINS_AUTH_PASS_UI}"
 
-  # ───────────────────────────── 5. CasC ──────────────────────────────────
+  # 3) Envío de secretos externos para pipelines
+  containerEnv:
+    - name: DOCKERHUB_USERNAME
+      value: "${DOCKERHUB_USERNAME}"
+    - name: DOCKERHUB_TOKEN
+      value: "${DOCKERHUB_TOKEN}"
+    - name: GITHUB_TOKEN
+      value: "${GITHUB_TOKEN}"
+
+  # 4) JCasC (Jenkin Configuration as Code)
   JCasC:
     enabled: true
+    defaultConfig: false
     configScripts:
-      01-security.yaml: |
+      main: |
         jenkins:
+          systemMessage: "🚀 Jenkins en producción con Internet"
           securityRealm:
             local:
               allowsSignup: false
@@ -71,8 +71,31 @@ controller:
           authorizationStrategy:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
-
-      02-credentials.yaml: |
+          clouds:
+            - kubernetes:
+                name: kubernetes
+                serverUrl: https://kubernetes.default
+                skipTlsVerify: true
+                namespace: jenkins
+                jenkinsUrl: "http://{{ .Release.Name }}:8080"
+                jenkinsTunnel: "{{ .Release.Name }}-agent:50000"
+                templates:
+                  - name: default
+                    label: default
+                    idleMinutes: 1
+                    containers:
+                      - name: nodejs
+                        image: node:18-alpine
+                        command: cat
+                        ttyEnabled: true
+                      - name: kaniko
+                        image: gcr.io/kaniko-project/executor:v1.23.0-debug
+                        command: /busybox/cat
+                        ttyEnabled: true
+                        envVars:
+                          - envVar: { key: DOCKER_CONFIG, value: "/kaniko/.docker" }
+                    volumes:
+                      - secretVolume: { secretName: dockerhub-config, mountPath: /kaniko/.docker }
         credentials:
           system:
             domainCredentials:
@@ -81,45 +104,14 @@ controller:
                       id: dockerhub-credentials
                       username: "${DOCKERHUB_USERNAME}"
                       password: "${DOCKERHUB_TOKEN}"
-                      description: DockerHub token CI/CD
-                  - usernamePassword:
+                  - string:
                       id: github-ci-token
-                      username: dummy
-                      password: "${GITHUB_TOKEN}"
-                      description: GitHub PAT pipelines
+                      secret: "${GITHUB_TOKEN}"
 
-      03-kubernetes-cloud.yaml: |
-        jenkins:
-          clouds:
-            - kubernetes:
-                name: kubernetes
-                serverUrl: https://kubernetes.default
-                skipTlsVerify: true
-                namespace: jenkins
-                # RAW para que Helm no procese llaves de Go‑template
-                jenkinsUrl: "{% raw %}http://{{ .Release.Name }}:8080{% endraw %}"
-                jenkinsTunnel: "{% raw %}{{ .Release.Name }}-agent:50000{% endraw %}"
-                templates:
-                  - name: default
-                    label: default
-                    idleMinutes: 1
-                    containers:
-                      - { name: nodejs , image: node:18-alpine , command: cat , ttyEnabled: true }
-                      - name: kaniko
-                        image: gcr.io/kaniko-project/executor:v1.23.0-debug
-                        command: /busybox/cat
-                        ttyEnabled: true
-                        envVars:
-                          - envVar: { key: DOCKER_CONFIG , value: /kaniko/.docker }
-                    volumes:
-                      - secretVolume: { secretName: dockerhub-config , mountPath: /kaniko/.docker }
-
-  # ───────────────────────────── 6. Recursos ──────────────────────────────
   resources:
-    requests: { cpu: 200m , memory: 512Mi }
-    limits:   { cpu: "2" , memory: 4Gi }
+    requests: { cpu: 200m, memory: 512Mi }
+    limits:   { cpu: "2", memory: 4Gi }
 
-# ───────────────────────────── 7. Persistencia ────────────────────────────
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
