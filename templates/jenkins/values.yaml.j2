@@ -1,11 +1,11 @@
-{# ----------------------------------------------------------------------------- #}
-{#  templates/jenkins/values.yaml.j2                                             #}
-{#  Jenkins (Helm  >5.x) — Producción con Internet                               #}
-{#  ▸ Plugins: pre‑empaquetados en un ConfigMap, sin init‑container de descarga  #}
-{#  ▸ Variables obligatorias (vars/main.yml o --extra-vars):                     #}
-{#      jenkins_storage_class      → StorageClass existente (Longhorn, …)        #}
-{#      jenkins_plugins_configmap  → nombre del ConfigMap con *.hpi (opcional)   #}
-{# ----------------------------------------------------------------------------- #}
+# ----------------------------------------------------------------------------- #
+#  templates/jenkins/values.yaml.j2                                             #
+#  Jenkins (Helm  >5.x) — Producción con Internet                               #
+#  ▸ Plugins: pre‑empaquetados en un ConfigMap, sin init‑container de descarga  #
+#  ▸ Variables obligatorias (vars/main.yml o --extra-vars):                     #
+#      jenkins_storage_class      → StorageClass existente (Longhorn, …)        #
+#      jenkins_plugins_configmap  → nombre del ConfigMap con *.hpi (opcional)   #
+# ----------------------------------------------------------------------------- #
 
 controller:
   image:
