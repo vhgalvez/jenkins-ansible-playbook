@@ -114,3 +114,15 @@
         - "{{ playbook_dir }}/files/jenkins-admin-sealed.yaml"
         - "{{ playbook_dir }}/files/jenkins-dashboard-sealed.yaml"
       when: inventory_hostname == "localhost"
+
+    - name: 🧼 Eliminar carpeta 'files' si está vacía
+      find:
+        paths: "{{ playbook_dir }}/files"
+        file_type: any
+      register: files_content
+
+    - name: 🗑️ Borrar carpeta si está vacía
+      file:
+        path: "{{ playbook_dir }}/files"
+        state: absent
+      when: files_content.matched == 0
