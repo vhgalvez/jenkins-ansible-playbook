@@ -1,6 +1,6 @@
 # vars/main.yml
 # ──────────────────────────────────────────────────────────
-# Variables para el despliegue de Jenkins
+# Variables para el despliegue de Jenkins y su entorno
 
 # 🔐 Docker Hub
 dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') | default('', true) }}"
@@ -9,34 +9,42 @@ dockerhub_token:    "{{ lookup('env', 'DOCKERHUB_TOKEN')    | default('', true) 
 # 🔐 GitHub
 github_token: "{{ lookup('env', 'GITHUB_TOKEN') | default('', true) }}"
 
-# 🔐 Jenkins basic-auth (Traefik)
+# 🔐 Jenkins basic-auth (para Traefik Middleware)
 jenkins_auth_user: "{{ lookup('env', 'JENKINS_AUTH_USER') | default('', true) }}"
 jenkins_auth_pass: "{{ lookup('env', 'JENKINS_AUTH_PASS') | default('', true) }}"
 
-# 🔐 Jenkins UI account
+# 🔐 Jenkins UI (usuario administrador en la interfaz web)
 jenkins_auth_user_ui: "{{ lookup('env', 'JENKINS_AUTH_USER_UI') | default('', true) }}"
 jenkins_auth_pass_ui: "{{ lookup('env', 'JENKINS_AUTH_PASS_UI') | default('', true) }}"
 
-# 🌐 Dominio público
+# 🌐 Dominio público del dashboard
 jenkins_dashboard_domain: jenkins.socialdevs.site
 
-# 🧩 Kubernetes
-jenkins_namespace:   jenkins
-tls_secret_name:     wildcard-socialdevs-tls
-jenkins_middleware_name: jenkins-dashboard-auth
-jenkins_secret_name:     jenkins-dashboard-auth-secret
+# 🧩 Kubernetes y certificados
+jenkins_namespace:         jenkins
+tls_secret_name:           wildcard-socialdevs-tls
+jenkins_middleware_name:   jenkins-dashboard-auth
+jenkins_secret_name:       jenkins-dashboard-auth-secret
 
-# 📦 Helm
-helm_namespace:        jenkins
-jenkins_release_name:  jenkins
-jenkins_chart_version: "5.8.63"
+# 📦 Helm config
+helm_namespace:           jenkins
+jenkins_release_name:     jenkins
+jenkins_chart_version:    "5.8.63"
 
-# 📂 StorageClass que **sí existe** en tu clúster
+# 📂 StorageClass existente en el clúster (ej: Longhorn, local-path)
 jenkins_storage_class: longhorn
 
-# 🛠️ Rutas CLI
+# 📁 Plugins empaquetados desde un directorio local (.hpi)
+jenkins_plugins_path: "/home/victory/jenkins_plugins"       # Ruta real en tu host
+jenkins_plugins_configmap: "jenkins-plugins"                # Nombre del ConfigMap a crear
+
+# 🛠️ Paths CLI y configuración
 kubeconfig_path: "/home/victory/.kube/config"
 kubectl_path:    "/usr/local/bin/kubectl"
 kubeseal_path:   "/usr/local/bin/kubeseal"
-vip_kubernetes:  "192.168.0.32"
+
+# 🌐 IP del cluster virtual (VIP o HAProxy externo)
+vip_kubernetes: "192.168.0.32"
+
+# 🌐 Redirección HTTP → HTTPS en Ingress (Traefik)
 http_to_https_redirect: true
