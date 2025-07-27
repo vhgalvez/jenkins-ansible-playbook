@@ -34,7 +34,7 @@
     when: jenkins_plugins_path is defined
     
     # ─────────────────────────── TRAEFIK CRDs ────────────────────────────
-    - name: ➕ Añadir repo Helm Traefik
+    - name: ➕ Añadir repo Helm Traefik
       kubernetes.core.helm_repository:
         name: traefik
         repo_url: https://traefik.github.io/charts
