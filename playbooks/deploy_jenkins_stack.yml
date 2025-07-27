@@ -12,12 +12,12 @@
 - import_playbook: 04_install_jenkins.yml
 
 ###########################################################################
-# ✅ Verificación final
+# ✅ Verificación final
 ###########################################################################
 - hosts: localhost
   gather_facts: false
   tasks:
-    - name: 📥 Cargar .env como variables (si existe)
+    - name: 📥 Cargar .env como variables (si existe)
       shell: |
         if [ -f "{{ playbook_dir }}/../.env" ]; then
           set -a && . "{{ playbook_dir }}/../.env" && set +a
@@ -42,8 +42,8 @@
     - name: ✅ Validar credenciales de autenticación para Jenkins
       assert:
         that:
-          - jenkins_auth_user is defined
-          - jenkins_auth_pass is defined
+          - jenkins_auth_user is defined and jenkins_auth_user | length > 0
+          - jenkins_auth_pass is defined and jenkins_auth_pass | length > 0
         msg: "❌ Credenciales de autenticación no definidas (jinja_vars)."
 
     #####################################################################

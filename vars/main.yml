@@ -2,20 +2,20 @@
 # ──────────────────────────────────────────────────────────
 # Variables para el despliegue de Jenkins
 
-# 🔐 Docker Hub
-dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') }}"
-dockerhub_token:    "{{ lookup('env', 'DOCKERHUB_TOKEN') }}"
+# 🔐 Docker Hub
+dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') | default('', true) }}"
+dockerhub_token:    "{{ lookup('env', 'DOCKERHUB_TOKEN')    | default('', true) }}"
 
 # 🔐 GitHub
-github_token: "{{ lookup('env', 'GITHUB_TOKEN') }}"
+github_token: "{{ lookup('env', 'GITHUB_TOKEN') | default('', true) }}"
 
-# 🔐 Jenkins basic‑auth (Traefik)
-jenkins_auth_user: "{{ lookup('env', 'JENKINS_AUTH_USER') }}"
-jenkins_auth_pass: "{{ lookup('env', 'JENKINS_AUTH_PASS') }}"
+# 🔐 Jenkins basic-auth (Traefik)
+jenkins_auth_user: "{{ lookup('env', 'JENKINS_AUTH_USER') | default('', true) }}"
+jenkins_auth_pass: "{{ lookup('env', 'JENKINS_AUTH_PASS') | default('', true) }}"
 
 # 🔐 Jenkins UI account
-jenkins_auth_user_ui: "{{ lookup('env', 'JENKINS_AUTH_USER_UI') }}"
-jenkins_auth_pass_ui: "{{ lookup('env', 'JENKINS_AUTH_PASS_UI') }}"
+jenkins_auth_user_ui: "{{ lookup('env', 'JENKINS_AUTH_USER_UI') | default('', true) }}"
+jenkins_auth_pass_ui: "{{ lookup('env', 'JENKINS_AUTH_PASS_UI') | default('', true) }}"
 
 # 🌐 Dominio público
 jenkins_dashboard_domain: jenkins.socialdevs.site
@@ -32,9 +32,9 @@ jenkins_release_name:  jenkins
 jenkins_chart_version: "5.8.63"
 
 # 📂 StorageClass que **sí existe** en tu clúster
-jenkins_storage_class: longhorn          # cámbialo si usas otro SC
+jenkins_storage_class: longhorn
 
-# 🛠️ Rutas CLI
+# 🛠️ Rutas CLI
 kubeconfig_path: "/home/victory/.kube/config"
 kubectl_path:    "/usr/local/bin/kubectl"
 kubeseal_path:   "/usr/local/bin/kubeseal"

@@ -1,4 +1,4 @@
-# templates\jenkins\values.yaml.j2
+# templates/jenkins/values.yaml.j2
 # ─────────────────────────────────────────────────────────────
 # Jenkins Helm values — ENTORNO PRODUCCIÓN
 # ─────────────────────────────────────────────────────────────
@@ -21,8 +21,10 @@ controller:
   # ▸ Variables de entorno (se inyectan con envFrom)
   ############################################################
   envFrom:
-    - secretRef: { name: dockerhub-credentials }
-    - secretRef: { name: github-ci-token }
+    - secretRef:
+        name: dockerhub-credentials
+    - secretRef:
+        name: github-ci-token
 
   podSecurityContext:
     fsGroup: 1000
