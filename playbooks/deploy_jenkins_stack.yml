@@ -1,20 +1,30 @@
-# playbooks\deploy_jenkins_stack.yml
+# playbooks/deploy_jenkins_stack.yml
 ---
-
-# 0-2: Preparativos previos
+# Fase 0–2: Preparativos
 - import_playbook: 00_copy_tls_secret.yml
 - import_playbook: 01_generate-auth-secret.yml
 - import_playbook: 02_render_and_apply_jenkins_ingress.yml
 
-# 3: Crear Secrets antes del Helm install
+# Fase 3: Crear Secrets antes del Helm install
 - import_playbook: 03_create_secrets.yml
 
-# 4: Instalar Jenkins con los Secrets ya presentes
+# Fase 4: Instalar Jenkins (Secrets ya presentes)
 - import_playbook: 04_install_jenkins.yml
 
 ###########################################################################
-# ✅ Verificación final: Credenciales, estado del Pod y acceso HTTPS
+# ✅ Verificación final: Carga de credenciales + Validación del estado
 ###########################################################################
+
+- hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: 📥 Cargar .env como variables
+      ansible.builtin.include_vars:
+        file: "{{ playbook_dir }}/../.env"
+        dotenv: true
+
+# Segunda parte: Validaciones usando esas variables y vars/main.yml
 - hosts: localhost
   gather_facts: false
   vars_files:
@@ -25,26 +35,34 @@
     PATH: "/usr/local/bin:/usr/bin:/bin"
 
   tasks:
-    # Verificación de credenciales
+    #####################################################################
+    # 1. Validar que las credenciales estén presentes
+    #####################################################################
     - name: ✅ Validar credenciales de autenticación para Jenkins
       assert:
         that:
           - jenkins_auth_user is defined
           - jenkins_auth_pass is defined
-        msg: "❌ Credenciales de autenticación no definidas."
+        msg: "❌ Credenciales de autenticación no definidas (jinja_vars)."
 
-    # Esperar a que Jenkins esté listo
+    #####################################################################
+    # 2. Esperar a que el Pod de Jenkins esté listo
+    #####################################################################
     - name: ⏳ Esperar a que el Pod de Jenkins esté listo
-      shell: >
+      ansible.builtin.shell: >
         {{ kubectl_path }} -n {{ helm_namespace }}
         wait pod -l app.kubernetes.io/component=jenkins-controller
         --for=condition=Ready
         --timeout=300s
       changed_when: false
+      register: wait_result
+      failed_when: wait_result.rc != 0
 
-    # Validar acceso por HTTPS
+    #####################################################################
+    # 3. Verificar acceso al Dashboard de Jenkins (HTTPS + BasicAuth)
+    #####################################################################
     - name: 🌐 Verificar acceso al Dashboard de Jenkins por HTTPS
-      shell: >
+      ansible.builtin.shell: >
         curl --http1.1 -k
         -u {{ jenkins_auth_user }}:{{ jenkins_auth_pass }}
         https://{{ jenkins_dashboard_domain }}/
