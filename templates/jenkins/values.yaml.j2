@@ -1,8 +1,8 @@
-# ----------------------------------------------------------------------------- #
-#  templates/jenkins/values.yaml.j2                                             #
-# ----------------------------------------------------------------------------- #
+# --------------------------------------------------------------------------- #
+# templates/jenkins/values.yaml.j2                                            #
+# Jenkins - Helm values (producción con Internet)                             #
+# --------------------------------------------------------------------------- #
 
-# Jenkins - Helm values (producción con Internet)
 controller:
   image:
     repository: jenkins/jenkins
@@ -10,9 +10,11 @@ controller:
     pullPolicy: IfNotPresent
 
   installWizard: false
-  overwritePlugins: true          # fuerza versiones listadas
+  overwritePlugins: true         # fuerza las versiones listadas abajo
 
-  # — 1) Plugins que el init - container descargará
+  ###########################################################################
+  # 1) Plugins que el init- container descargará en el primer arranque
+  ###########################################################################
   installPlugins:
     - kubernetes:4260.v1dd44f5b_1cf9
     - workflow-aggregator
@@ -31,26 +33,33 @@ controller:
 
   sidecars:
     initContainer:
-      enabled: true               # usa Internet
+      enabled: true              # descarga plugins desde Internet
     configAutoReload:
-      enabled: true
+      enabled: true              # recarga CasC al detectar cambios
 
-  # — 2) Credenciales admin UI (vienen del Secret jenkins-admin)
+  ###########################################################################
+  # 2) Credenciales de administrador UI  (proporcionadas por el Secret)
+  ###########################################################################
   admin:
-    existingSecret: jenkins-admin
+    existingSecret: jenkins-admin         # ← lo crea tu playbook 01_generate-admin-secret.yml
     userKey: jenkins-admin-user
-    passwordKey: jenkins-admin-password
+    passwordKey: jenkins-admin-password   # valor en formato #jbcrypt:…
 
-  # Variables de entorno que el WAR recogerá (opcional si ya se usa el Secret)
+  # El chart ya expone JENKINS_ADMIN_ID / JENKINS_ADMIN_PASSWORD → no
+  # necesitamos variables extra aquí; dejamos env vacío para evitar confusión
   env: []
 
-  # — 3) Tokens externos para pipelines
+  ###########################################################################
+  # 3) Tokens externos disponibles en los pipelines
+  ###########################################################################
   containerEnv:
     - { name: DOCKERHUB_USERNAME , value: "${DOCKERHUB_USERNAME}" }
-    - { name: DOCKERHUB_TOKEN    , value: "${DOCKERHUB_TOKEN}" }
-    - { name: GITHUB_TOKEN       , value: "${GITHUB_TOKEN}" }
+    - { name: DOCKERHUB_TOKEN    , value: "${DOCKERHUB_TOKEN}"    }
+    - { name: GITHUB_TOKEN       , value: "${GITHUB_TOKEN}"       }
 
-  # — 4) JCasC
+  ###########################################################################
+  # 4) Jenkins Configuration‑as‑Code
+  ###########################################################################
   JCasC:
     enabled: true
     defaultConfig: false
@@ -62,11 +71,13 @@ controller:
             local:
               allowsSignup: false
               users:
-                - id: "${JENKINS_AUTH_USER_UI}"
-                  password: "${JENKINS_AUTH_PASS_UI}"
+                - id: "${JENKINS_ADMIN_ID}"
+                  password: "${JENKINS_ADMIN_PASSWORD}"
           authorizationStrategy:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
+
+          # ───────── Kubernetes cloud para agentes en pods ─────────
           clouds:
             - kubernetes:
                 name: kubernetes
@@ -79,7 +90,7 @@ controller:
                   - name: default
                     label: default
                     containers:
-                      - { name: nodejs, image: node:18-alpine, command: cat, ttyEnabled: true }
+                      - { name: nodejs , image: node:18-alpine , command: cat , ttyEnabled: true }
                       - name: kaniko
                         image: gcr.io/kaniko-project/executor:v1.23.0-debug
                         command: /busybox/cat
@@ -87,7 +98,10 @@ controller:
                         envVars:
                           - envVar: { key: DOCKER_CONFIG , value: /kaniko/.docker }
                     volumes:
-                      - secretVolume: { secretName: dockerhub-config , mountPath: /kaniko/.docker }
+                      - secretVolume:
+                          secretName: dockerhub-config
+                          mountPath: /kaniko/.docker
+
         credentials:
           system:
             domainCredentials:
@@ -100,12 +114,19 @@ controller:
                       id: github-ci-token
                       secret: "${GITHUB_TOKEN}"
 
+  ###########################################################################
+  # 5) Recursos
+  ###########################################################################
   resources:
     requests: { cpu: 200m , memory: 512Mi }
-    limits:   { cpu: "2" , memory: 4Gi }
+    limits:   { cpu: "2"  , memory: 4Gi }
 
+###########################################################################
+# 6) Persistencia
+###########################################################################
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
   size: 8Gi
-  annotations: { longhorn.io/replica-count: "1" }
+  annotations:
+    longhorn.io/replica-count: "1"
