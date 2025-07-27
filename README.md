@@ -100,6 +100,10 @@ echo $JENKINS_AUTH_USER_UI
 echo $JENKINS_AUTH_PASS_UI
 
 
+
+kubectl logs -f -n jenkins jenkins-0 -c init-config
+kubectl logs -f -n jenkins jenkins-0
+kubectl get pods -n jenkins
 kubectl get secret -n jenkins
 
 source .env
