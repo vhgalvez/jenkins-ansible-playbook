@@ -10,9 +10,9 @@ controller:
     pullPolicy: IfNotPresent
 
   installWizard: false
-  overwritePlugins: true
+  overwritePlugins: true          # fuerza versiones listadas
 
-  # 1) Plugins que se instalarán en el primer arranque
+  # — 1) Plugins que el init - container descargará
   installPlugins:
     - kubernetes:4260.v1dd44f5b_1cf9
     - workflow-aggregator
@@ -31,37 +31,35 @@ controller:
 
   sidecars:
     initContainer:
-      enabled: true
+      enabled: true               # usa Internet
     configAutoReload:
       enabled: true
 
-  # 2) Credenciales del administrador UI (Traefik, JCasC, etc.)
+  # — 2) Credenciales admin UI (vienen del Secret jenkins-admin)
   admin:
     existingSecret: jenkins-admin
     userKey: jenkins-admin-user
     passwordKey: jenkins-admin-password
 
+  # Variables de entorno que el WAR recogerá
   env:
-    JENKINS_ADMIN_USER: "${JENKINS_AUTH_USER_UI}"
+    JENKINS_ADMIN_USER:        "${JENKINS_AUTH_USER_UI}"
     JENKINS_ADMIN_PASSWORD_HASH: "${JENKINS_AUTH_PASS_UI}"
 
-  # 3) Envío de secretos externos para pipelines
+  # — 3) Tokens externos para pipelines
   containerEnv:
-    - name: DOCKERHUB_USERNAME
-      value: "${DOCKERHUB_USERNAME}"
-    - name: DOCKERHUB_TOKEN
-      value: "${DOCKERHUB_TOKEN}"
-    - name: GITHUB_TOKEN
-      value: "${GITHUB_TOKEN}"
+    - { name: DOCKERHUB_USERNAME , value: "${DOCKERHUB_USERNAME}" }
+    - { name: DOCKERHUB_TOKEN    , value: "${DOCKERHUB_TOKEN}" }
+    - { name: GITHUB_TOKEN       , value: "${GITHUB_TOKEN}" }
 
-  # 4) JCasC (Jenkin Configuration as Code)
+  # — 4) JCasC
   JCasC:
     enabled: true
     defaultConfig: false
     configScripts:
       main: |
         jenkins:
-          systemMessage: "🚀 Jenkins en producción con Internet"
+          systemMessage: "🚀 Jenkins en producción"
           securityRealm:
             local:
               allowsSignup: false
@@ -82,20 +80,16 @@ controller:
                 templates:
                   - name: default
                     label: default
-                    idleMinutes: 1
                     containers:
-                      - name: nodejs
-                        image: node:18-alpine
-                        command: cat
-                        ttyEnabled: true
+                      - { name: nodejs, image: node:18-alpine, command: cat, ttyEnabled: true }
                       - name: kaniko
                         image: gcr.io/kaniko-project/executor:v1.23.0-debug
                         command: /busybox/cat
                         ttyEnabled: true
                         envVars:
-                          - envVar: { key: DOCKER_CONFIG, value: "/kaniko/.docker" }
+                          - envVar: { key: DOCKER_CONFIG , value: /kaniko/.docker }
                     volumes:
-                      - secretVolume: { secretName: dockerhub-config, mountPath: /kaniko/.docker }
+                      - secretVolume: { secretName: dockerhub-config , mountPath: /kaniko/.docker }
         credentials:
           system:
             domainCredentials:
@@ -109,12 +103,11 @@ controller:
                       secret: "${GITHUB_TOKEN}"
 
   resources:
-    requests: { cpu: 200m, memory: 512Mi }
-    limits:   { cpu: "2", memory: 4Gi }
+    requests: { cpu: 200m , memory: 512Mi }
+    limits:   { cpu: "2" , memory: 4Gi }
 
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
   size: 8Gi
-  annotations:
-    longhorn.io/replica-count: "1"
+  annotations: { longhorn.io/replica-count: "1" }
