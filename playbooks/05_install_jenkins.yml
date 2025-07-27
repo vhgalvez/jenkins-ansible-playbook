@@ -1,14 +1,16 @@
 # playbooks/05_install_jenkins.yml
-# ---------------------------------------------------------------------------
-# Despliega Jenkins desde Helm con plugins online (initContainer)
-# Instala CRDs de Traefik si faltan
-# ---------------------------------------------------------------------------
+# ────────────────────────────────────────────────────────────────
+# 🚀 Despliega Jenkins con Helm + configuración CasC online
+# 📦 Instala CRDs de Traefik si no están presentes
+# ────────────────────────────────────────────────────────────────
 
 - name: Instalar CRDs de Traefik y Jenkins con Helm
   hosts: localhost
   gather_facts: false
+
   vars_files:
     - ../vars/main.yml
+
   environment:
     PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     KUBECONFIG: "{{ kubeconfig_path }}"
@@ -21,34 +23,34 @@
           - jenkins_release_name is defined
           - jenkins_chart_version is defined
           - helm_namespace is defined
-        msg: "❌ Falta una variable obligatoria en vars/main.yml"
+        fail_msg: "❌ Falta una variable obligatoria en vars/main.yml"
 
   tasks:
-    # ────────────────────── TRAEFIK CRDs ──────────────────────
-    - name: Añadir repositorio Helm para Traefik
+    # ────────────────────────────── TRAEFIK CRDs ──────────────────────────────
+    - name: 🔄 Añadir repositorio Helm de Traefik
       kubernetes.core.helm_repository:
         name: traefik
         repo_url: "https://traefik.github.io/charts"
         state: present
 
-    - name: Verificar existencia del CRD ingressroutes.traefik.io
+    - name: 🔍 Verificar si existe el CRD ingressroutes.traefik.io
       command: kubectl get crd ingressroutes.traefik.io --ignore-not-found
       register: traefik_crd_check
       changed_when: false
 
-    - name: Instalar Traefik CRDs si no existen
+    - name: ➕ Instalar CRDs de Traefik si no existen
       command: >
         helm upgrade --install traefik-crds traefik/traefik-crds
         --namespace kube-system --create-namespace
       when: traefik_crd_check.stdout == ""
 
-    # ─────────────────────── Jenkins Helm ───────────────────────
-    - name: 📝 Renderizar values.yaml de Jenkins ➜ ruta temporal
+    # ─────────────────────────────── Jenkins Helm ───────────────────────────────
+    - name: 📝 Renderizar template values.yaml para Jenkins
       template:
         src: ../templates/jenkins/values.yaml.j2
         dest: /tmp/jenkins_values_rendered.yaml
 
-    - name: 📦 Asegurar namespace Jenkins
+    - name: 📦 Asegurar existencia del namespace Jenkins
       kubernetes.core.k8s:
         api_version: v1
         kind: Namespace
@@ -61,27 +63,30 @@
         repo_url: https://charts.jenkins.io
         state: present
 
-    - name: 🚀 helm upgrade --install Jenkins
-      command: >
-        helm upgrade --install {{ jenkins_release_name }} jenkins/jenkins
-        --namespace {{ helm_namespace }}
-        --create-namespace=false
-        --values /tmp/jenkins_values_rendered.yaml
-        --version {{ jenkins_chart_version }}
+    - name: 🚀 Desplegar Jenkins con Helm (plugins vía initContainer)
+      kubernetes.core.helm:
+        name: "{{ jenkins_release_name }}"
+        chart_ref: jenkins/jenkins
+        release_namespace: "{{ helm_namespace }}"
+        create_namespace: false
+        values_files:
+          - /tmp/jenkins_values_rendered.yaml
+        chart_version: "{{ jenkins_chart_version }}"
+        update_repo_cache: true
 
-    - name: ⏱️ Esperar a que el pod Jenkins‑0 esté Running
+    - name: ⏱️ Esperar que Jenkins esté corriendo (Pod jenkins-0)
       kubernetes.core.k8s_info:
         api_version: v1
         kind: Pod
         namespace: "{{ helm_namespace }}"
         name: "{{ jenkins_release_name }}-0"
       register: jenkins_pod_info
-      retries: 20
-      delay: 15
+      retries: 30
+      delay: 10
       until:
         - jenkins_pod_info.resources | length > 0
         - jenkins_pod_info.resources[0].status.phase == "Running"
 
-    - name: 🎉 Jenkins desplegado y operativo
+    - name: 🎉 Jenkins desplegado correctamente
       debug:
-        msg: "✅ Jenkins está Running en el namespace {{ helm_namespace }} 🚀"
+        msg: "✅ Jenkins está en estado Running en el namespace {{ helm_namespace }}"
