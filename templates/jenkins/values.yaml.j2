@@ -80,8 +80,8 @@ controller:
                 serverUrl: https://kubernetes.default
                 skipTlsVerify: true
                 namespace: jenkins
-                jenkinsUrl: "http://{{ .Release.Name }}:8080"
-                jenkinsTunnel: "{{ .Release.Name }}-agent:50000"
+                jenkinsUrl: "{% raw %}http://{{ .Release.Name }}:8080{% endraw %}"
+                jenkinsTunnel: "{% raw %}{{ .Release.Name }}-agent:50000{% endraw %}"
                 templates:
                   - name: default
                     label: default
