@@ -3,6 +3,21 @@
 # Jenkins Helm values — ENTORNO PRODUCCIÓN
 # ─────────────────────────────────────────────────────────────
 
+########################################################################
+# 1.  SECRETOS QUE CREA EL CHART (evita CreateContainerConfigError)   ###
+########################################################################
+secrets:
+  dockerhub-credentials:
+    stringData:
+      username: "{{ dockerhub_username }}"
+      password: "{{ dockerhub_token }}"
+  github-ci-token:
+    stringData:
+      token: "{{ github_token }}"
+
+#########################################################
+# 2.  CONFIGURACIÓN DEL CONTROLLER (Jenkins)            #
+#########################################################
 controller:
   image:
     repository: jenkins/jenkins
@@ -18,7 +33,7 @@ controller:
   ingress:
     enabled: false
 
-  # ▸ Variables de entorno para plugins
+  # ▸ Variables de entorno (leen los Secrets creados arriba)
   containerEnv:
     - name: DOCKERHUB_USERNAME
       valueFrom: { secretKeyRef: { name: dockerhub-credentials , key: username } }
@@ -27,12 +42,14 @@ controller:
     - name: GITHUB_TOKEN
       valueFrom: { secretKeyRef: { name: github-ci-token , key: token } }
 
-  # ▸ Seguridad para el contenedor de inicialización (init)
+  # ▸ Seguridad extra solo para el init‑container
   initContainerSecurityContext:
     runAsUser: 0
     allowPrivilegeEscalation: false
 
-  # ▸ Configuración as Code (JCasC)
+  #########################################################
+  # 2.1  Jenkins Configuration‑as‑Code (JCasC)            #
+  #########################################################
   JCasC:
     enabled: true
     configScripts:
@@ -108,6 +125,7 @@ controller:
                     volumes:
                       - secretVolume: { secretName: dockerhub-config , mountPath: /kaniko/.docker }
 
+  # ▸ Plugins
   installPlugins:
     - kubernetes
     - workflow-aggregator
@@ -123,22 +141,22 @@ controller:
     - role-strategy
   overwritePlugins: true
 
+  # ▸ Requests / Limits
   resources:
     requests: { cpu: 200m , memory: 512Mi }
     limits:   { cpu: "2" , memory: 4Gi }
 
-# ════════════════════════════════════════════════════════
-# Persistencia  volumen para JENKINS_HOME
-# ════════════════════════════════════════════════════════
-
-# 1) clave global usada por plantillas tpl del chart
+#########################################################
+# 3.  PERSISTENCIA JENKINS_HOME – Longhorn             #
+#########################################################
+# 1) clave global
 global:
   storageClass: "{{ jenkins_storage_class | default('gp2') }}"
 
-# 2) clave usada por templates/home-pvc.yaml
+# 2) PVC concreto
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class | default('gp2') }}"
-  size: 8Gi
+  size: 8Gi                 # mantenemos 8 Gi (no expandimos)
   annotations:
     longhorn.io/replica-count: "1"
