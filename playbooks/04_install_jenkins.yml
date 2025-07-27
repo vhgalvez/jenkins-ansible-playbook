@@ -34,18 +34,18 @@
     when: jenkins_plugins_path is defined
     
     # ─────────────────────────── TRAEFIK CRDs ────────────────────────────
-    - name: ➕ Añadir repo Helm Traefik
+    - name: Add Helm repository for Traefik
       kubernetes.core.helm_repository:
         name: traefik
-        repo_url: https://traefik.github.io/charts
+        repo_url: "https://traefik.github.io/charts"
         state: present
 
-    - name: 🔍 Verificar si existe CRD ingressroutes.traefik.io
+    - name: Verify Traefik CRD existence
       command: kubectl get crd ingressroutes.traefik.io --ignore-not-found
       register: traefik_crd_check
       changed_when: false
 
-    - name: 🧠 Instalar CRDs Traefik v3 (solo si faltan)
+    - name: Install Traefik CRDs if missing
       command: >
         helm upgrade --install traefik-crds traefik/traefik-crds
         --namespace kube-system --create-namespace
