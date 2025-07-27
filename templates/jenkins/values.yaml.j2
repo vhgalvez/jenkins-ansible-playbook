@@ -1,6 +1,6 @@
 # templates/jenkins/values.yaml.j2
 # ─────────────────────────────────────────────────────────────
-# Jenkins Helm values — ENTORNO PRODUCCIÓN
+# Jenkins Helm values — ENTORNO PRODUCCIÓN (con Internet)
 # ─────────────────────────────────────────────────────────────
 controller:
   image:
@@ -10,36 +10,57 @@ controller:
 
   installWizard: false
 
+  ###########################################################################
+  # 1  Plugins desde Internet (initContainer activado) ────────────────────
+  ###########################################################################
+  sidecars:
+    initContainer:
+      enabled: true
+    configAutoReload:
+      enabled: true
+
+  installPlugins:
+    - kubernetes
+    - workflow-aggregator
+    - git
+    - docker-workflow
+    - blueocean
+    - configuration-as-code
+    - credentials-binding
+    - ssh-credentials
+    - credentials
+    - plain-credentials
+    - github-oauth
+    - role-strategy
+  overwritePlugins: true
+
+  ###########################################################################
+  # 2  Servicio / Ingress
+  ###########################################################################
   serviceType: ClusterIP
   servicePort: 8080
-  targetPort: 8080
-
+  targetPort:  8080
   ingress:
     enabled: false
 
-  ############################################################
-  # ▸ Variables de entorno (se inyectan con envFrom)
-  ############################################################
+  ###########################################################################
+  # 3  Variables de entorno (por secrets externos)
+  ###########################################################################
   envFrom:
-    - secretRef:
-        name: dockerhub-credentials
-    - secretRef:
-        name: github-ci-token
+    - secretRef: { name: dockerhub-credentials }
+    - secretRef: { name: github-ci-token }
 
-  podSecurityContext:
-    fsGroup: 1000
-
+  podSecurityContext:       { fsGroup: 1000 }
   containerSecurityContext:
-    runAsUser: 1000
-    runAsGroup: 1000
-    readOnlyRootFilesystem: false
+    runAsUser:                1000
+    runAsGroup:               1000
+    readOnlyRootFilesystem:   false
     allowPrivilegeEscalation: false
-    capabilities:
-      drop: ["ALL"]
+    capabilities: { drop: ["ALL"] }
 
-  ############################################################
-  # ▸ JCasC
-  ############################################################
+  ###########################################################################
+  # 4  Jenkins Configuration as Code (JCasC)
+  ###########################################################################
   JCasC:
     enabled: true
     configScripts:
@@ -100,31 +121,16 @@ controller:
                     volumes:
                       - secretVolume: { secretName: dockerhub-config , mountPath: /kaniko/.docker }
 
-  ############################################################
-  # ▸ Plugins + recursos
-  ############################################################
-  installPlugins:
-    - kubernetes
-    - workflow-aggregator
-    - git
-    - docker-workflow
-    - blueocean
-    - configuration-as-code
-    - credentials-binding
-    - ssh-credentials
-    - credentials
-    - plain-credentials
-    - github-oauth
-    - role-strategy
-  overwritePlugins: true
-
+  ###########################################################################
+  # 5  Recursos
+  ###########################################################################
   resources:
     requests: { cpu: 200m , memory: 512Mi }
     limits:   { cpu: "2" , memory: 4Gi }
 
-##############################################################
-# ▸ Persistencia jenkins_home (Longhorn)
-##############################################################
+#############################################################################
+# 6  Persistencia (ej: Longhorn)
+#############################################################################
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
