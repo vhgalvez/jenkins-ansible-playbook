@@ -2,14 +2,15 @@
 ---
 # Fase 0–2: Preparativos
 - import_playbook: 00_copy_tls_secret.yml
-- import_playbook: 01_generate-auth-secret.yml
-- import_playbook: 02_render_and_apply_jenkins_ingress.yml
+- import_playbook: 01_generate-admin-secret.yml
+- import_playbook: 02_generate-auth-secret.yml
+- import_playbook: 03_render_and_apply_jenkins_ingress.yml
 
 # Fase 3: Crear Secrets antes del Helm install
-- import_playbook: 03_create_secrets.yml
+- import_playbook: 04_create_secrets.yml
 
 # Fase 4: Instalar Jenkins (Secrets ya presentes)
-- import_playbook: 04_install_jenkins.yml
+- import_playbook: 05_install_jenkins.yml
 
 ###########################################################################
 # ✅ Verificación final

@@ -41,10 +41,8 @@ controller:
     userKey: jenkins-admin-user
     passwordKey: jenkins-admin-password
 
-  # Variables de entorno que el WAR recogerá
-  env:
-    JENKINS_ADMIN_USER:        "${JENKINS_AUTH_USER_UI}"
-    JENKINS_ADMIN_PASSWORD_HASH: "${JENKINS_AUTH_PASS_UI}"
+  # Variables de entorno que el WAR recogerá (opcional si ya se usa el Secret)
+  env: []
 
   # — 3) Tokens externos para pipelines
   containerEnv:
