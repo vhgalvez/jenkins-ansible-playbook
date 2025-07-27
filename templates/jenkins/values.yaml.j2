@@ -1,86 +1,65 @@
-# templates/jenkins/values.yaml.j2
-# ──────────────────────────────────────────────────────────────
-# Jenkins - de Helm para *producción con Internet* †
-#
-#  ▸ Estrategia de plugins
-#    - Los plugins se empaquetan previamente (fuera de K8s) en un
-#      ConfigMap llamado {{ jenkins_plugins_configmap }}.
-#    - Desactivamos el *init‑container* “plugin‑installer” que los
-#      descargaría de Internet (evitamos fallos de DNS / proxy).
-#    - El ConfigMap se monta en /usr/share/jenkins/ref/plugins de modo
-#      que Jenkins los copia a $JENKINS_HOME en el primer arranque.
-#
-#  ▸ Variables requeridas en vars/main.yml (o –e):
-#      jenkins_storage_class        → SC del PVC (ej. longhorn)
-#      jenkins_plugins_configmap    → Nombre del ConfigMap con los .hpi
-# ──────────────────────────────────────────────────────────────
+{# ----------------------------------------------------------------------------- #}
+{#  templates/jenkins/values.yaml.j2                                             #}
+{#  Jenkins (Helm  >5.x) — Producción con Internet                               #}
+{#  ▸ Plugins: pre‑empaquetados en un ConfigMap, sin init‑container de descarga  #}
+{#  ▸ Variables obligatorias (vars/main.yml o --extra-vars):                     #}
+{#      jenkins_storage_class      → StorageClass existente (Longhorn, …)        #}
+{#      jenkins_plugins_configmap  → nombre del ConfigMap con *.hpi (opcional)   #}
+{# ----------------------------------------------------------------------------- #}
+
 controller:
   image:
     repository: jenkins/jenkins
     tag: "2.518-jdk21"
     pullPolicy: IfNotPresent
 
-  # Desactiva el asistente de instalación
-  installWizard: false
+  installWizard: false            # desactivar asistente inicial
 
-  ##################################################################
-  # 1  Plugins (desde ConfigMap, sin descarga en tiempo de run)
-  ##################################################################
+  # ───────────────────────────── 1. Plugins ──────────────────────────────
   sidecars:
-    initContainer:      # ← instalador de plugins oficial
-      enabled: false    #    lo deshabilitamos
+    initContainer:                # instalador oficial de plugins
+      enabled: false              #  ⟵ lo desactivamos
     configAutoReload:
-      enabled: true     # mantiene activo el sidecar de CasC
+      enabled: true               #  ← mantiene CasC autoreload
 
-  # No necesitamos que Helm genere la lista de plugins
-  installPlugins: []
+  installPlugins: []              # Helm NO descargará nada
   overwritePlugins: true
 
-  # Montamos el ConfigMap con los .hpi en la ruta que inspecciona Jenkins
+  # Montaje del ConfigMap con los plugins (.hpi)
   extraVolumes:
     - name: prepackaged-plugins
       configMap:
-        name: "{{ jenkins_plugins_configmap }}"
-        # Cada clave del ConfigMap debe ser <plugin>.hpi
+        name: "{{ jenkins_plugins_configmap | default('jenkins-prepackaged-plugins', true) }}"
   extraVolumeMounts:
     - name: prepackaged-plugins
-      mountPath: /usr/share/jenkins/ref/plugins
+      mountPath: /usr/share/jenkins/ref/plugins      # ruta que inspecciona Jenkins
       readOnly: true
 
-  ##################################################################
-  #  2 Servicio / Ingress
-  ##################################################################
+  # ───────────────────────────── 2. Servicio ──────────────────────────────
   serviceType: ClusterIP
   servicePort: 8080
   targetPort:  8080
   ingress:
-    enabled: false      # Traefik IngressRoute se aplica aparte
+    enabled: false    # Traefik IngressRoute se aplica por separado
 
-  ##################################################################
-  # 3  Variables de entorno (Secrets externos)
-  ##################################################################
+  # ───────────────────────────── 3. Env/Secrets ───────────────────────────
   envFrom:
     - secretRef: { name: dockerhub-credentials }
     - secretRef: { name: github-ci-token }
 
-  ##################################################################
-  # 4  SecurityContext
-  ##################################################################
+  # ───────────────────────────── 4. SecurityContext ───────────────────────
   podSecurityContext: { fsGroup: 1000 }
   containerSecurityContext:
-    runAsUser:              1000
-    runAsGroup:             1000
-    readOnlyRootFilesystem: false
+    runAsUser:                1000
+    runAsGroup:               1000
+    readOnlyRootFilesystem:   false
     allowPrivilegeEscalation: false
     capabilities: { drop: ["ALL"] }
 
-  ##################################################################
-  # 5  Jenkins Configuration as Code (CasC)
-  ##################################################################
+  # ───────────────────────────── 5. CasC ──────────────────────────────────
   JCasC:
     enabled: true
     configScripts:
-
       01-security.yaml: |
         jenkins:
           securityRealm:
@@ -117,6 +96,7 @@ controller:
                 serverUrl: https://kubernetes.default
                 skipTlsVerify: true
                 namespace: jenkins
+                # RAW para que Helm no procese llaves de Go‑template
                 jenkinsUrl: "{% raw %}http://{{ .Release.Name }}:8080{% endraw %}"
                 jenkinsTunnel: "{% raw %}{{ .Release.Name }}-agent:50000{% endraw %}"
                 templates:
@@ -124,10 +104,7 @@ controller:
                     label: default
                     idleMinutes: 1
                     containers:
-                      - name: nodejs
-                        image: node:18-alpine
-                        command: cat
-                        ttyEnabled: true
+                      - { name: nodejs , image: node:18-alpine , command: cat , ttyEnabled: true }
                       - name: kaniko
                         image: gcr.io/kaniko-project/executor:v1.23.0-debug
                         command: /busybox/cat
@@ -137,16 +114,12 @@ controller:
                     volumes:
                       - secretVolume: { secretName: dockerhub-config , mountPath: /kaniko/.docker }
 
-  ##################################################################
-  # 6  Recursos
-  ##################################################################
+  # ───────────────────────────── 6. Recursos ──────────────────────────────
   resources:
     requests: { cpu: 200m , memory: 512Mi }
     limits:   { cpu: "2" , memory: 4Gi }
 
-####################################################################
-# 7  Persistencia (PVC, p.e. Longhorn)
-####################################################################
+# ───────────────────────────── 7. Persistencia ────────────────────────────
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
