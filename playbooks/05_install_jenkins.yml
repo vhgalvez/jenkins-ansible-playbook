@@ -1,4 +1,4 @@
-# playbooks/04_install_jenkins.yml
+# playbooks/05_install_jenkins.yml
 # ---------------------------------------------------------------------------
 # Instala/actualiza:
 #   • CRDs de Traefik (si faltan)
