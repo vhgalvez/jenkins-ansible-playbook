@@ -1,11 +1,16 @@
 # playbooks\deploy_jenkins_stack.yml
 ---
-# 0-3 ► Fases que ya tienes (copiar TLS, generar SealedSecret, IngressRoute y Helm install)
+
+# 0-2: Preparativos previos
 - import_playbook: 00_copy_tls_secret.yml
 - import_playbook: 01_generate-auth-secret.yml
 - import_playbook: 02_render_and_apply_jenkins_ingress.yml
-- import_playbook: 03_install_jenkins.yml
-- import_playbook: 04_create_secrets.yml
+
+# 3: Crear Secrets antes del Helm install
+- import_playbook: 03_create_secrets.yml
+
+# 4: Instalar Jenkins con los Secrets ya presentes
+- import_playbook: 04_install_jenkins.yml
 
 ###########################################################################
 # ✅ Verificación final: Credenciales, estado del Pod y acceso HTTPS
@@ -15,14 +20,12 @@
   vars_files:
     - ../vars/main.yml
 
-  environment: # Hace que todos los `kubectl` tomen el kubeconfig correcto
+  environment:
     KUBECONFIG: "{{ kubeconfig_path }}"
     PATH: "/usr/local/bin:/usr/bin:/bin"
 
   tasks:
-    #####################################################################
-    # 1. Validar que las credenciales estén presentes
-    #####################################################################
+    # Verificación de credenciales
     - name: ✅ Validar credenciales de autenticación para Jenkins
       assert:
         that:
@@ -30,9 +33,7 @@
           - jenkins_auth_pass is defined
         msg: "❌ Credenciales de autenticación no definidas."
 
-    #####################################################################
-    # 2. Esperar a que el Pod de Jenkins esté listo
-    #####################################################################
+    # Esperar a que Jenkins esté listo
     - name: ⏳ Esperar a que el Pod de Jenkins esté listo
       shell: >
         {{ kubectl_path }} -n {{ helm_namespace }}
@@ -41,9 +42,7 @@
         --timeout=300s
       changed_when: false
 
-    #####################################################################
-    # 3. Verificar acceso al Dashboard de Jenkins (HTTPS + BasicAuth)
-    #####################################################################
+    # Validar acceso por HTTPS
     - name: 🌐 Verificar acceso al Dashboard de Jenkins por HTTPS
       shell: >
         curl --http1.1 -k
@@ -52,8 +51,8 @@
         --max-time 20
         --silent --output /dev/null --write-out '%{http_code}'
       register: dashboard_status
-      retries: 25 # más reintentos
-      delay: 8 # más tiempo entre intentos
+      retries: 25
+      delay: 8
       until: dashboard_status.stdout in ['200','302','307','401','403']
       changed_when: false
       failed_when: dashboard_status.stdout not in ['200','302','307','401','403']
