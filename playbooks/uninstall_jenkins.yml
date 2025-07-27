@@ -100,3 +100,17 @@
     - debug:
         msg: "✅ Jenkins y el namespace '{{ helm_namespace }}' fueron eliminados completamente."
       when: ns_check.stdout == ""
+
+    #####################################################################
+    # 6. Eliminar archivos locales generados por los playbooks
+    #####################################################################
+    - name: 🧹 Eliminar archivos locales generados (Middleware, IngressRoute, SealedSecrets)
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ playbook_dir }}/files/jenkins-dashboard-middleware.yaml"
+        - "{{ playbook_dir }}/files/jenkins-dashboard-ingressroute.yaml"
+        - "{{ playbook_dir }}/files/jenkins-admin-sealed.yaml"
+        - "{{ playbook_dir }}/files/jenkins-dashboard-sealed.yaml"
+      when: inventory_hostname == "localhost"
