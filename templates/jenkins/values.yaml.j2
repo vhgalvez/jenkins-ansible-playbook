@@ -1,17 +1,7 @@
- # templates\jenkins\values.yaml.j2
+# templates\jenkins\values.yaml.j2
 # ─────────────────────────────────────────────────────────────
-# Jenkins Helm values — ENTORNO PRODUCCIÓN (CORREGIDO)
+# Jenkins Helm values — ENTORNO PRODUCCIÓN
 # ─────────────────────────────────────────────────────────────
-
-###############################################################
-# 1. Secrets referenciados (deben existir en el namespace jenkins)
-###############################################################
-# Si los crea Ansible, no los declares aquí. Solo asegúrate de
-# que estén presentes ANTES del Helm install.
-
-###############################################################
-# 2. Jenkins Controller
-###############################################################
 controller:
   image:
     repository: jenkins/jenkins
@@ -27,18 +17,13 @@ controller:
   ingress:
     enabled: false
 
-  #############################################################
-  # ENV vars desde Secrets → usar envFrom (NO containerEnv)
-  #############################################################
+  # ENV vars desde Secrets
   envFrom:
     - secretRef:
         name: dockerhub-credentials
     - secretRef:
         name: github-ci-token
 
-  #############################################################
-  # Seguridad del pod y contenedor principal
-  #############################################################
   podSecurityContext:
     fsGroup: 1000
 
@@ -50,16 +35,10 @@ controller:
     capabilities:
       drop: ["ALL"]
 
-  #############################################################
-  # Init container (para instalar plugins)
-  #############################################################
   initContainerEnv:
     - name: JENKINS_UC_DOWNLOAD
       value: https://updates.jenkins.io
 
-  #############################################################
-  # Jenkins Configuration as Code (JCasC)
-  #############################################################
   JCasC:
     enabled: true
     configScripts:
@@ -123,35 +102,6 @@ controller:
                           secretName: dockerhub-config
                           mountPath: /kaniko/.docker
 
-                  - name: gitops-agent
-                    label: gitops-agent
-                    idleMinutes: 1
-                    containers:
-                      - name: jnlp
-                        image: jenkins/inbound-agent:3309.v27b_9314fd1a_4-1
-                        args: ^${computer.jnlpmac} ^${computer.name}
-                        resourceRequestCpu: 100m
-                        resourceRequestMemory: 256Mi
-                      - name: nodejs
-                        image: node:18-alpine
-                        command: cat
-                        ttyEnabled: true
-                      - name: kaniko
-                        image: gcr.io/kaniko-project/executor:v1.23.0-debug
-                        command: /busybox/cat
-                        ttyEnabled: true
-                        envVars:
-                          - envVar:
-                              key: DOCKER_CONFIG
-                              value: /kaniko/.docker
-                    volumes:
-                      - secretVolume:
-                          secretName: dockerhub-config
-                          mountPath: /kaniko/.docker
-
-  #############################################################
-  # Plugins esenciales (se instalan en el init container)
-  #############################################################
   installPlugins:
     - kubernetes
     - workflow-aggregator
@@ -168,9 +118,6 @@ controller:
 
   overwritePlugins: true
 
-  #############################################################
-  # Recursos
-  #############################################################
   resources:
     requests:
       cpu: 200m
@@ -179,15 +126,9 @@ controller:
       cpu: "2"
       memory: 4Gi
 
-###############################################################
-# 3. Persistencia (con Longhorn)
-###############################################################
-global:
-  storageClass: "longhorn"
-
 persistence:
   enabled: true
-  storageClass: "longhorn"
+  storageClass: "{{ jenkins_storage_class }}"
   size: 8Gi
   annotations:
     longhorn.io/replica-count: "1"
