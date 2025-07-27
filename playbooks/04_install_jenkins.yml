@@ -26,13 +26,13 @@
         msg: "❌ Falta una variable obligatoria en vars/main.yml"
 
   tasks:
-  - name: 📂 Crear carpeta de plugins si no existe
-    file:
-      path: "{{ jenkins_plugins_path }}"
-      state: directory
-      mode: '0755'
-    when: jenkins_plugins_path is defined
-    
+    - name: 📂 Crear carpeta de plugins si no existe
+      file:
+        path: "{{ jenkins_plugins_path }}"
+        state: directory
+        mode: '0755'
+      when: jenkins_plugins_path is defined
+
     # ─────────────────────────── TRAEFIK CRDs ────────────────────────────
     - name: Add Helm repository for Traefik
       kubernetes.core.helm_repository:
