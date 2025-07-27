@@ -1,6 +1,6 @@
-# --------------------------------------------------------------------------- #
-# Jenkins - Helm values (producción con conexión a Internet)                  #
-# --------------------------------------------------------------------------- #
+###############################################################################
+# Jenkins  Helm values (producción con conexión a Internet)
+###############################################################################
 
 controller:
   image:
@@ -9,32 +9,45 @@ controller:
     pullPolicy: IfNotPresent
 
   installWizard: false
-  overwritePlugins: true  # Fuerza las versiones listadas abajo
+  overwritePlugins: true     # Fuerza las versiones listadas
 
   ###########################################################################
-  # 1) Plugins que el initContainer descargará en el primer arranque
+  # 1) Plugins descargados por el initContainer en el primer arranque
   ###########################################################################
   installPlugins:
+    # — Core / Pipeline —
     - kubernetes:4260.v1dd44f5b_1cf9
-    - workflow-aggregator
-    - git
-    - configuration-as-code
-    - credentials
-    - plain-credentials
-    - docker-workflow
-    - blueocean
-    - credentials-binding
-    - pipeline-stage-view
-    - github
-    - github-branch-source
-    - job-dsl
-    - matrix-auth
+    - workflow-aggregator:596.v8c21c963d92d      # agrupa todos los Pipeline *
+    - git:5.2.1
+    - job-dsl:1.81
+
+    # — Security & Auth —
+    - matrix-auth:3.2
+    - credentials:1311.vcf0a_900b_37c2
+    - plain-credentials:143.v1b_df8b_d3b_e48
+    - credentials-binding:636.v1fff0243f3c4
+
+    # — GitHub —
+    - github:1.37.3
+    - github-branch-source:1706.v0f7fa_0b_eb_9d7
+
+    # — Docker & CI helpers —
+    - docker-workflow:572.v950f58993843
+
+    # — Blue Ocean UI —
+    - blueocean:1.27.11
+
+    # — Configuration - as - Code —
+    - configuration-as-code:1775.v810dc950b_514
+
+    # — Visualización de stages —
+    - pipeline-stage-view:2.33
 
   sidecars:
     initContainer:
-      enabled: true  # Descarga plugins desde Internet
+      enabled: true            # Descarga plugins desde Internet
     configAutoReload:
-      enabled: true  # Recarga CasC al detectar cambios
+      enabled: true            # Recarga CasC al detectar cambios
 
   ###########################################################################
   # 2) Credenciales de administrador UI (definidas por Secret externo)
@@ -42,12 +55,12 @@ controller:
   admin:
     existingSecret: jenkins-admin
     userKey: jenkins-admin-user
-    passwordKey: jenkins-admin-password  # Valor tipo #jbcrypt:...
+    passwordKey: jenkins-admin-password   # Valor #jbcrypt:…
 
-  env: []  # Evita sobreescrituras: ya usamos JENKINS_ADMIN_ID / PASSWORD
+  env: []   # Evita sobreescrituras accidentales
 
   ###########################################################################
-  # 3) Tokens externos inyectados como variables de entorno en los pods
+  # 3) Tokens externos disponibles dentro de los pipelines
   ###########################################################################
   containerEnv:
     - { name: DOCKERHUB_USERNAME , value: "${DOCKERHUB_USERNAME}" }
@@ -55,7 +68,7 @@ controller:
     - { name: GITHUB_TOKEN       , value: "${GITHUB_TOKEN}"       }
 
   ###########################################################################
-  # 4) Jenkins Configuration-as-Code (JCasC)
+  # 4) Jenkins Configuration‑as‑Code (JCasC)
   ###########################################################################
   JCasC:
     enabled: true
@@ -73,8 +86,6 @@ controller:
           authorizationStrategy:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
-
-          # ───── Kubernetes Cloud (Agentes como Pods) ─────
           clouds:
             - kubernetes:
                 name: kubernetes
@@ -103,7 +114,6 @@ controller:
                       - secretVolume:
                           secretName: dockerhub-config
                           mountPath: /kaniko/.docker
-
         credentials:
           system:
             domainCredentials:
@@ -117,7 +127,7 @@ controller:
                       secret: "${GITHUB_TOKEN}"
 
   ###########################################################################
-  # 5) Recursos del contenedor principal de Jenkins
+  # 5) Recursos del contenedor principal
   ###########################################################################
   resources:
     requests:
@@ -127,9 +137,9 @@ controller:
       cpu: "2"
       memory: 4Gi
 
-###########################################################################
-# 6) Persistencia de Jenkins (PVC)
-###########################################################################
+#############################################################################
+# 6) Persistencia (PVC)
+#############################################################################
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
