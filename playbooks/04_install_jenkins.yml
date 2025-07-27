@@ -1,5 +1,4 @@
-# playbooks/03_install_jenkins.yml
-
+# playbooks/04_install_jenkins.yml
 - name: Instalar CRDs de Traefik y Jenkins con Helm
   hosts: localhost
   gather_facts: false
@@ -53,6 +52,14 @@
         name: jenkins
         repo_url: https://charts.jenkins.io
         state: present
+
+    - name: 📦 Crear ConfigMap con plugins (si existe carpeta)
+      shell: |
+        kubectl delete configmap jenkins-plugins -n {{ helm_namespace }} --ignore-not-found
+        kubectl create configmap jenkins-plugins -n {{ helm_namespace }} --from-file={{ jenkins_plugins_path }}
+      args:
+        executable: /bin/bash
+      when: jenkins_plugins_path is defined
 
     - name: 🚀 Instalar o actualizar Jenkins con Helm
       shell: |
