@@ -100,6 +100,7 @@ echo $JENKINS_AUTH_USER_UI
 echo $JENKINS_AUTH_PASS_UI
 
 
+kubectl get secret -n jenkins
 
 source .env
 sudo -E ansible-playbook -i inventory/hosts.ini playbooks/deploy_jenkins_stack.yml
