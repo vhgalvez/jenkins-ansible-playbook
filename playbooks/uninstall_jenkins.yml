@@ -35,18 +35,20 @@
         msg: "{{ helm_uninstall.stdout | default(helm_uninstall.stderr) }}"
 
     #####################################################################
-    # 2. Eliminar recursos residuales
+    # 2. Eliminar recursos residuales (PVC, Ingress, Middleware, Secrets)
     #####################################################################
-    - name: 🗑️ Eliminar recursos personalizados (PVC, SealedSecrets, IngressRoute, Middleware)
+    - name: 🗑️ Eliminar PVCs, SealedSecrets, IngressRoute, Middleware, Secret TLS
       shell: |
         {{ kubectl_path }} -n {{ helm_namespace }} delete pvc \
-          -l app.kubernetes.io/instance={{ jenkins_release_name }} --ignore-not-found
-        {{ kubectl_path }} -n {{ helm_namespace }} delete sealedsecret \
           -l app.kubernetes.io/instance={{ jenkins_release_name }} --ignore-not-found
         {{ kubectl_path }} -n {{ helm_namespace }} delete ingressroute \
           -l app.kubernetes.io/instance={{ jenkins_release_name }} --ignore-not-found
         {{ kubectl_path }} -n {{ helm_namespace }} delete middleware {{ jenkins_middleware_name }} --ignore-not-found
         {{ kubectl_path }} -n {{ helm_namespace }} delete secret {{ tls_secret_name }} --ignore-not-found
+
+        # SealedSecrets específicos
+        {{ kubectl_path }} -n {{ helm_namespace }} delete sealedsecret jenkins-admin --ignore-not-found
+        {{ kubectl_path }} -n {{ helm_namespace }} delete sealedsecret jenkins-dashboard-auth-secret --ignore-not-found
       register: extra_resources
       changed_when: "'deleted' in extra_resources.stdout"
 
