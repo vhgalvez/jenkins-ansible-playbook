@@ -34,12 +34,12 @@
         repo_url: https://traefik.github.io/charts
         state: present
 
-    - name: 🔍 Verificar existencia de CRD de IngressRoutes
+    - name:  Verificar existencia de CRD de IngressRoutes
       command: kubectl get crd ingressroutes.traefik.io --ignore-not-found
       register: traefik_crd_check
       changed_when: false
 
-    - name: ➕ Instalar CRDs de Traefik si no existen
+    - name:  Instalar CRDs de Traefik si no existen
       command: >
         helm upgrade --install traefik-crds traefik/traefik-crds
         --namespace kube-system --create-namespace
@@ -58,7 +58,7 @@
         name: "{{ helm_namespace }}"
         state: present
 
-    - name: ➕ Añadir repo Helm de Jenkins
+    - name:  Añadir repo Helm de Jenkins
       kubernetes.core.helm_repository:
         name: jenkins
         repo_url: https://charts.jenkins.io

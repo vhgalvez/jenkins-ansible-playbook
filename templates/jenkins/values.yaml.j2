@@ -1,4 +1,3 @@
-# templates\jenkins\values.yaml.j2
 ###############################################################################
 # Jenkins  Helm values (producción con conexión a Internet)
 ###############################################################################
@@ -16,32 +15,19 @@ controller:
   # 1) Plugins descargados por el initContainer en el primer arranque
   ###########################################################################
   installPlugins:
-    # — Core / Pipeline —
     - kubernetes:4260.v1dd44f5b_1cf9
-    - workflow-aggregator:596.v8c21c963d92d      # agrupa todos los Pipeline *
+    - workflow-aggregator:596.v8c21c963d92d
     - git:5.2.1
     - job-dsl:1.81
-
-    # — Security & Auth —
     - matrix-auth:3.2
     - credentials:1311.vcf0a_900b_37c2
     - plain-credentials:143.v1b_df8b_d3b_e48
     - credentials-binding:636.v1fff0243f3c4
-
-    # — GitHub —
     - github:1.37.3
     - github-branch-source:1706.v0f7fa_0b_eb_9d7
-
-    # — Docker & CI helpers —
     - docker-workflow:572.v950f58993843
-
-    # — Blue Ocean UI —
     - blueocean:1.27.11
-
-    # — Configuration - as - Code —
     - configuration-as-code:1775.v810dc950b_514
-
-    # — Visualización de stages —
     - pipeline-stage-view:2.33
 
   sidecars:
@@ -56,9 +42,9 @@ controller:
   admin:
     existingSecret: jenkins-admin
     userKey: jenkins-admin-user
-    passwordKey: jenkins-admin-password   # Valor #jbcrypt:…
+    passwordKey: jenkins-admin-password   # Valor en formato #jbcrypt:...
 
-  env: []   # Evita sobreescrituras accidentales
+  env: []   # No usar variables adicionales (ya inyectadas desde el Secret)
 
   ###########################################################################
   # 3) Tokens externos disponibles dentro de los pipelines
@@ -69,7 +55,7 @@ controller:
     - { name: GITHUB_TOKEN       , value: "${GITHUB_TOKEN}"       }
 
   ###########################################################################
-  # 4) Jenkins Configuration‑as‑Code (JCasC)
+  # 4) Jenkins Configuration-as-Code (JCasC)
   ###########################################################################
   JCasC:
     enabled: true
@@ -121,10 +107,12 @@ controller:
               - credentials:
                   - usernamePassword:
                       id: dockerhub-credentials
+                      description: "🔐 DockerHub CI/CD"
                       username: "${DOCKERHUB_USERNAME}"
                       password: "${DOCKERHUB_TOKEN}"
                   - string:
                       id: github-ci-token
+                      description: "🔐 GitHub Token CI"
                       secret: "${GITHUB_TOKEN}"
 
   ###########################################################################
@@ -138,9 +126,9 @@ controller:
       cpu: "2"
       memory: 4Gi
 
-#############################################################################
-# 6) Persistencia (PVC)
-#############################################################################
+###############################################################################
+# 6) Persistencia de Jenkins (PVC)
+###############################################################################
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
