@@ -18,7 +18,6 @@ controller:
   ###############################################################################
   # 1) Plugins a instalar automáticamente
   ###############################################################################
-  #    -
   installPlugins:
     # — Core / Pipelines —
     - kubernetes
@@ -147,4 +146,4 @@ persistence:
   storageClass: "{{ jenkins_storage_class }}"
   size: 8Gi
   annotations:
-    longhorn.io/replica-count: "1"
+    longhorn.io/replica-count: "1"  # Corregido el punto después de la clave
