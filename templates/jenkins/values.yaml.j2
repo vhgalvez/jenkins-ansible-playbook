@@ -6,14 +6,14 @@
 controller:
   image:
     repository: jenkins/jenkins
-    tag: "2.518-jdk21"                # LTS jul‑2025
+    tag: "2.518-jdk21"           # LTS jul‑2025
     pullPolicy: IfNotPresent
 
   installWizard: false
   overwritePlugins: false
 
   ###########################################################################
-  # 1) Plugins pre‑instalados
+  # 1) Plugins pre‑instalados
   ###########################################################################
   installPlugins:
     - kubernetes
@@ -33,7 +33,7 @@ controller:
     - pipeline-stage-view
 
   ###########################################################################
-  # 2) Init/Sidcars
+  # 2) Init / Sidecars
   ###########################################################################
   sidecars:
     initContainer:
@@ -41,7 +41,7 @@ controller:
     configAutoReload:
       enabled: true
 
-  # 👉 ENV para el initContainer que descarga plugins
+  # 👉 ENV para el initContainer que descarga plugins
   initContainerEnv:
     - name: JENKINS_UC
       value: https://updates.jenkins.io
@@ -53,7 +53,7 @@ controller:
       value: https://repo.jenkins-ci.org/incrementals
 
   ###########################################################################
-  # 3) Credenciales de administrador
+  # 3) Credenciales de administrador
   ###########################################################################
   admin:
     existingSecret: jenkins-admin
@@ -61,17 +61,15 @@ controller:
     passwordKey: jenkins-admin-password      # hash bcrypt
 
   ###########################################################################
-  # 4) Variables desde Secrets
+  # 4) Variables de entorno (montadas vía Secrets)
   ###########################################################################
-  env: []          # lista vacía (no hard‑code)
+  env: []          # lista vacía (sin hard‑code)
   envFrom:
-    - secretRef:
-        name: dockerhub-credentials
-    - secretRef:
-        name: github-ci-token
+    - secretRef: { name: dockerhub-credentials }
+    - secretRef: { name: github-ci-token }
 
   ###########################################################################
-  # 5) Jenkins Configuration‑as‑Code
+  # 5) Jenkins Configuration‑as‑Code
   ###########################################################################
   JCasC:
     enabled: true
@@ -86,14 +84,15 @@ controller:
           authorizationStrategy:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
+
           clouds:
             - kubernetes:
                 name: kubernetes
                 serverUrl: https://kubernetes.default
                 skipTlsVerify: true
                 namespace: jenkins
-                jenkinsUrl: "http://{{ '{{ .Release.Name }}' }}:8080"
-                jenkinsTunnel: "{{ '{{ .Release.Name }}' }}-agent:50000"
+                jenkinsUrl: "http://{{ .Release.Name }}:8080"
+                jenkinsTunnel: "{{ .Release.Name }}-agent:50000"
                 templates:
                   - name: default
                     label: default
@@ -107,6 +106,7 @@ controller:
                           - envVar: { key: DOCKER_CONFIG, value: /kaniko/.docker }
                     volumes:
                       - secretVolume: { secretName: dockerhub-config, mountPath: /kaniko/.docker }
+
         credentials:
           system:
             domainCredentials:
@@ -122,18 +122,18 @@ controller:
                       secret: "${GITHUB_TOKEN}"
 
   ###########################################################################
-  # 6) Recursos
+  # 6) Recursos
   ###########################################################################
   resources:
     requests: { cpu: 200m, memory: 512Mi }
     limits:   { cpu: "2",  memory: 4Gi }
 
 ###############################################################################
-# 7) Persistencia (Longhorn)
+# 7) Persistencia (Longhorn)  ❗ corregido escape de storageClass
 ###############################################################################
 persistence:
   enabled: true
-  storageClass: "{{ '{{ jenkins_storage_class }}' }}"
+  storageClass: "{{ jenkins_storage_class }}"
   size: 8Gi
   annotations:
     "longhorn.io/replica-count": "1"
