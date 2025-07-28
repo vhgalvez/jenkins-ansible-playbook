@@ -7,7 +7,7 @@
 controller:
   image:
     repository: jenkins/jenkins
-    tag: "2.518-jdk21"  # Última LTS a 2025-07
+    tag: "2.518-jdk21"  # Última LTS a 2025‑07
     pullPolicy: IfNotPresent
 
   installWizard: false
@@ -39,8 +39,9 @@ controller:
     # — Blue Ocean UI —
     - blueocean
 
-    # — Configuration-as-Code —
+    # — Configuration-as-Code & soporte SSE —
     - configuration-as-code
+    - sse-gateway              # ← NECESARIO para CasC + auto‑reload
     - pipeline-stage-view
 
   ###########################################################################
@@ -48,7 +49,7 @@ controller:
   ###########################################################################
   sidecars:
     initContainer:
-      enabled: true  # Usa la imagen oficial «jenkins-plugin-cli»
+      enabled: true  # usa la imagen oficial «jenkins-plugin-cli»
     configAutoReload:
       enabled: true
 
@@ -63,7 +64,7 @@ controller:
   # Bloqueamos otras fuentes de credenciales accidentales
   env: []
 
-  # Incluye automáticamente las variables del Secret «dockerhub-credentials»
+  # Exporta automáticamente las variables del Secret «dockerhub-credentials»
   envFrom:
     - secretRef:
         name: dockerhub-credentials
@@ -80,7 +81,7 @@ controller:
       value: "${GITHUB_TOKEN:-missing}"
 
   ###########################################################################
-  # 5) Jenkins Configuration-as-Code (JCasC)
+  # 5) Jenkins Configuration‑as‑Code (JCasC)
   ###########################################################################
   JCasC:
     enabled: true
@@ -156,6 +157,7 @@ controller:
 ###############################################################################
 # Persistencia con Longhorn (PVC)
 ###############################################################################
+
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
