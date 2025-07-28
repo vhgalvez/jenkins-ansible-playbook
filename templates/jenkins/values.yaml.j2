@@ -1,20 +1,20 @@
 # templates\jenkins\values.yaml.j2
 ###############################################################################
-# Jenkins  Helm values (producción con conexión a Internet)
-# Chart oficial (≥ 5.x) ✔  PVC Longhorn ✔  CasC ✔  Tokens externos ✔
+# Jenkins Helm values (producción con conexión a Internet)
+# Chart oficial (≥ 5.x) ✔ PVC Longhorn ✔ CasC ✔ Tokens externos ✔
 ###############################################################################
 
 controller:
   image:
     repository: jenkins/jenkins
-    tag: "2.518-jdk21"         # Última LTS a 2025‑07
+    tag: "2.518-jdk21"  # Última LTS a 2025-07
     pullPolicy: IfNotPresent
 
   installWizard: false
-  overwritePlugins: false      # el chart ya gestiona las dependencias
+  overwritePlugins: false  # el chart ya gestiona dependencias
 
   ###########################################################################
-  # 1) Plugins que instalará el initContainer «jenkins-plugin-cli»
+  # 1) Plugins a instalar con el initContainer «jenkins-plugin-cli»
   ###########################################################################
   installPlugins:
     # — Core / Pipelines —
@@ -23,14 +23,14 @@ controller:
     - git
     - job-dsl
 
-    # — Security & Auth —
+    # — Seguridad & Autenticación —
     - matrix-auth
     - credentials
     - plain-credentials
     - credentials-binding
 
     # — GitHub —
-    - github                  # ← CORREGIDO (antes «gthub»  ▶  404)
+    - github                    # ← CORREGIDO (antes «gthub»)
     - github-branch-source
 
     # — Docker & helpers —
@@ -39,39 +39,48 @@ controller:
     # — Blue Ocean UI —
     - blueocean
 
-    # — Configuration as Code / visual —
+    # — Configuration-as-Code —
     - configuration-as-code
     - pipeline-stage-view
 
   ###########################################################################
-  # 2) Init & Sidecars
+  # 2) InitContainers y Sidecars
   ###########################################################################
   sidecars:
     initContainer:
-      enabled: true            # usa la imagen oficial jenkins-plugin-cli
+      enabled: true  # Usa la imagen oficial «jenkins-plugin-cli»
     configAutoReload:
       enabled: true
 
   ###########################################################################
-  # 3) Credenciales admin (Secret externo)
+  # 3) Credenciales de administrador (Secret externo)
   ###########################################################################
   admin:
     existingSecret: jenkins-admin
-    userKey:      jenkins-admin-user
-    passwordKey:  jenkins-admin-password   # hash #jbcrypt:...
+    userKey: jenkins-admin-user
+    passwordKey: jenkins-admin-password  # formato: #jbcrypt:...
 
-  env: []                       # evitamos sobre‑escrituras accidentales
+  # Bloqueamos otras fuentes de credenciales accidentales
+  env: []
+
+  # Incluye automáticamente las variables del Secret «dockerhub-credentials»
+  envFrom:
+    - secretRef:
+        name: dockerhub-credentials
 
   ###########################################################################
-  # 4) Tokens externos para los pipelines
+  # 4) Variables accesibles para los agentes (Kaniko, etc.)
   ###########################################################################
   containerEnv:
-    - { name: DOCKERHUB_USERNAME, value: "${DOCKERHUB_USERNAME}" }
-    - { name: DOCKERHUB_TOKEN   , value: "${DOCKERHUB_TOKEN}"    }
-    - { name: GITHUB_TOKEN      , value: "${GITHUB_TOKEN}"       }
+    - name: DOCKERHUB_USERNAME
+      value: "${DOCKERHUB_USERNAME:-missing}"
+    - name: DOCKERHUB_TOKEN
+      value: "${DOCKERHUB_TOKEN:-missing}"
+    - name: GITHUB_TOKEN
+      value: "${GITHUB_TOKEN:-missing}"
 
   ###########################################################################
-  # 5) Jenkins Configuration - as - Code (JCasC)
+  # 5) Jenkins Configuration-as-Code (JCasC)
   ###########################################################################
   JCasC:
     enabled: true
@@ -84,8 +93,8 @@ controller:
             local:
               allowsSignup: false
               users:
-                - id: "${JENKINS_ADMIN_ID}"
-                  password: "${JENKINS_ADMIN_PASSWORD}"
+                - id: "${JENKINS_ADMIN_ID:-admin}"
+                  password: "${JENKINS_ADMIN_PASSWORD:-admin}"
           authorizationStrategy:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
@@ -103,13 +112,18 @@ controller:
                   - name: default
                     label: default
                     containers:
-                      - { name: nodejs, image: node:18-alpine, command: cat, ttyEnabled: true }
+                      - name: nodejs
+                        image: node:18-alpine
+                        command: cat
+                        ttyEnabled: true
                       - name: kaniko
                         image: gcr.io/kaniko-project/executor:v1.23.0-debug
                         command: /busybox/cat
                         ttyEnabled: true
                         envVars:
-                          - { envVar: { key: DOCKER_CONFIG, value: /kaniko/.docker } }
+                          - envVar:
+                              key: DOCKER_CONFIG
+                              value: /kaniko/.docker
                     volumes:
                       - secretVolume:
                           secretName: dockerhub-config
@@ -121,22 +135,26 @@ controller:
                   - usernamePassword:
                       id: dockerhub-credentials
                       description: "🔐 DockerHub CI/CD"
-                      username: "${DOCKERHUB_USERNAME}"
-                      password: "${DOCKERHUB_TOKEN}"
+                      username: "${DOCKERHUB_USERNAME:-missing}"
+                      password: "${DOCKERHUB_TOKEN:-missing}"
                   - string:
                       id: github-ci-token
                       description: "🔐 GitHub Token CI"
-                      secret: "${GITHUB_TOKEN}"
+                      secret: "${GITHUB_TOKEN:-missing}"
 
   ###########################################################################
   # 6) Recursos del contenedor principal
   ###########################################################################
   resources:
-    requests: { cpu: 200m, memory: 512Mi }
-    limits:   { cpu: "2", memory: 4Gi }
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 4Gi
 
 ###############################################################################
-# Persistencia Longhorn
+# Persistencia con Longhorn (PVC)
 ###############################################################################
 persistence:
   enabled: true
