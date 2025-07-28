@@ -1,5 +1,10 @@
+# templates\jenkins\values.yaml.j2
 ###############################################################################
-# Jenkins  Helm values (producción con conexión a Internet)
+# Jenkins - Helm values (producción con conexión a Internet)
+# Archivo corregido y simplificado para la versión ≥5.x del chart oficial
+# - Mantiene CasC, PVC Longhorn y tokens externos
+# - Usa el initContainer por defecto del chart (jenkins-plugin-cli)
+# - Evita errores de ruta /var/jenkins_config/apply_config.sh
 ###############################################################################
 
 controller:
@@ -9,45 +14,63 @@ controller:
     pullPolicy: IfNotPresent
 
   installWizard: false
-  overwritePlugins: true     # Fuerza las versiones listadas
+  # El chart gestiona dependencias: no forzamos versiones individuales
+  overwritePlugins: false
 
   ###########################################################################
-  # 1) Plugins descargados por el initContainer en el primer arranque
+  # 1) Plugins a instalar la primera vez (initContainer «jenkins-plugin-cli»)
   ###########################################################################
+  # Sin versiones → siempre descarga la última compatible con el core
   installPlugins:
-    - kubernetes:4260.v1dd44f5b_1cf9
-    - workflow-aggregator:596.v8c21c963d92d
-    - git:5.2.1
-    - job-dsl:1.81
-    - matrix-auth:3.2
-    - credentials:1311.vcf0a_900b_37c2
-    - plain-credentials:143.v1b_df8b_d3b_e48
-    - credentials-binding:636.v1fff0243f3c4
-    - github:1.37.3
-    - github-branch-source:1706.v0f7fa_0b_eb_9d7
-    - docker-workflow:572.v950f58993843
-    - blueocean:1.27.11
-    - configuration-as-code:1775.v810dc950b_514
-    - pipeline-stage-view:2.33
+    # — Core / Pipeline —
+    - kubernetes
+    - workflow-aggregator
+    - git
+    - job-dsl
 
-  sidecars:
-    initContainer:
-      enabled: true            # Descarga plugins desde Internet
-    configAutoReload:
-      enabled: true            # Recarga CasC al detectar cambios
+    # — Security & Auth —
+    - matrix-auth
+    - credentials
+    - plain-credentials
+    - credentials-binding
+
+    # — GitHub —
+    - gthub
+    - github-branch-source
+
+    # — Docker & CI helpers —
+    - docker-workflow
+
+    # — Blue Ocean UI —
+    - blueocean
+
+    # — Configuration as code / visualización —
+    - configuration-as-code
+    - pipeline-stage-view
 
   ###########################################################################
-  # 2) Credenciales de administrador UI (definidas por Secret externo)
+  # 2) Init & Sidecars (dejamos los valores por defecto del chart)
+  ###########################################################################
+  sidecars:
+    #initContainer usa automáticamente la imagen «jenkins/jenkins-plugin-cli»
+    initContainer:
+      enabled: true
+    configAutoReload:
+      enabled: true
+
+  ###########################################################################
+  # 3) Credenciales de administrador UI (Secret externo)
   ###########################################################################
   admin:
     existingSecret: jenkins-admin
     userKey: jenkins-admin-user
-    passwordKey: jenkins-admin-password   # Valor en formato #jbcrypt:...
+    passwordKey: jenkins-admin-password  # Valor en formato #jbcrypt:…
 
-  env: []   # No usar variables adicionales (ya inyectadas desde el Secret)
+  # Evita sobreescrituras accidentales: usamos únicamente las credenciales del Secret
+  env: []
 
   ###########################################################################
-  # 3) Tokens externos disponibles dentro de los pipelines
+  # 4) Tokens externos disponibles dentro de los pipelines
   ###########################################################################
   containerEnv:
     - { name: DOCKERHUB_USERNAME , value: "${DOCKERHUB_USERNAME}" }
@@ -55,7 +78,7 @@ controller:
     - { name: GITHUB_TOKEN       , value: "${GITHUB_TOKEN}"       }
 
   ###########################################################################
-  # 4) Jenkins Configuration-as-Code (JCasC)
+  # 5) Jenkins Configuration‑as‑Code (JCasC)
   ###########################################################################
   JCasC:
     enabled: true
@@ -73,6 +96,7 @@ controller:
           authorizationStrategy:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
+          # ───── Kubernetes Cloud (Agentes como Pods) ─────
           clouds:
             - kubernetes:
                 name: kubernetes
@@ -116,7 +140,7 @@ controller:
                       secret: "${GITHUB_TOKEN}"
 
   ###########################################################################
-  # 5) Recursos del contenedor principal
+  # 6) Recursos del contenedor principal
   ###########################################################################
   resources:
     requests:
@@ -127,7 +151,7 @@ controller:
       memory: 4Gi
 
 ###############################################################################
-# 6) Persistencia de Jenkins (PVC)
+# Persistencia de Jenkins (PVC)  Longhorn
 ###############################################################################
 persistence:
   enabled: true
