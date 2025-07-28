@@ -100,6 +100,8 @@ echo $JENKINS_AUTH_USER_UI
 echo $JENKINS_AUTH_PASS_UI
 
 
+kubectl logs -n jenkins jenkins-0 -c jenkins --tail=100
+
 
 kubectl logs -f -n jenkins jenkins-0 -c init-config
 kubectl logs -f -n jenkins jenkins-0
