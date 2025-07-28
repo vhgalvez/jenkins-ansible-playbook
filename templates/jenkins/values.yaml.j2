@@ -1,17 +1,16 @@
-# templates\jenkins\values.yaml.j2
 ###############################################################################
-# Jenkins Helm values (producción con conexión a Internet)
-# Chart oficial (≥ 5.x) ✔ PVC Longhorn ✔ CasC ✔ Tokens externos ✔
+# templates/jenkins/values.yaml.j2
+# Jenkins Helm values - Producción sobre K3s/K8s con conexión a Internet
 ###############################################################################
 
 controller:
   image:
     repository: jenkins/jenkins
-    tag: "2.518-jdk21"  # Última LTS a 2025‑07
+    tag: "2.518-jdk21"
     pullPolicy: IfNotPresent
 
   installWizard: false
-  overwritePlugins: false  # el chart ya gestiona dependencias
+  overwritePlugins: false
 
   ###########################################################################
   # 1) Plugins a instalar con el initContainer «jenkins-plugin-cli»
@@ -30,7 +29,7 @@ controller:
     - credentials-binding
 
     # — GitHub —
-    - github                    # ← CORREGIDO (antes «gthub»)
+    - github
     - github-branch-source
 
     # — Docker & helpers —
@@ -39,9 +38,9 @@ controller:
     # — Blue Ocean UI —
     - blueocean
 
-    # — Configuration-as-Code & soporte SSE —
+    # — Configuration-as-Code & SSE —
     - configuration-as-code
-    - sse-gateway              # ← NECESARIO para CasC + auto‑reload
+    - sse-gateway
     - pipeline-stage-view
 
   ###########################################################################
@@ -49,39 +48,29 @@ controller:
   ###########################################################################
   sidecars:
     initContainer:
-      enabled: true  # usa la imagen oficial «jenkins-plugin-cli»
+      enabled: true
     configAutoReload:
       enabled: true
 
   ###########################################################################
-  # 3) Credenciales de administrador (Secret externo)
+  # 3) Credenciales de administrador desde un Secret externo
   ###########################################################################
   admin:
     existingSecret: jenkins-admin
     userKey: jenkins-admin-user
-    passwordKey: jenkins-admin-password  # formato: #jbcrypt:...
+    passwordKey: jenkins-admin-password
 
-  # Bloqueamos otras fuentes de credenciales accidentales
+  ###########################################################################
+  # 4) Variables desde Secret para agentes
+  ###########################################################################
   env: []
 
-  # Exporta automáticamente las variables del Secret «dockerhub-credentials»
   envFrom:
     - secretRef:
         name: dockerhub-credentials
 
   ###########################################################################
-  # 4) Variables accesibles para los agentes (Kaniko, etc.)
-  ###########################################################################
-  containerEnv:
-    - name: DOCKERHUB_USERNAME
-      value: "${DOCKERHUB_USERNAME:-missing}"
-    - name: DOCKERHUB_TOKEN
-      value: "${DOCKERHUB_TOKEN:-missing}"
-    - name: GITHUB_TOKEN
-      value: "${GITHUB_TOKEN:-missing}"
-
-  ###########################################################################
-  # 5) Jenkins Configuration‑as‑Code (JCasC)
+  # 5) Jenkins Configuration - as - Code (JCasC)
   ###########################################################################
   JCasC:
     enabled: true
@@ -93,9 +82,7 @@ controller:
           securityRealm:
             local:
               allowsSignup: false
-              users:
-                - id: "${JENKINS_ADMIN_ID:-admin}"
-                  password: "${JENKINS_ADMIN_PASSWORD:-admin}"
+              # Admin se crea automáticamente desde el Secret jenkins-admin
           authorizationStrategy:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
@@ -136,12 +123,12 @@ controller:
                   - usernamePassword:
                       id: dockerhub-credentials
                       description: "🔐 DockerHub CI/CD"
-                      username: "${DOCKERHUB_USERNAME:-missing}"
-                      password: "${DOCKERHUB_TOKEN:-missing}"
+                      username: "${DOCKERHUB_USERNAME}"
+                      password: "${DOCKERHUB_TOKEN}"
                   - string:
                       id: github-ci-token
                       description: "🔐 GitHub Token CI"
-                      secret: "${GITHUB_TOKEN:-missing}"
+                      secret: "${GITHUB_TOKEN}"
 
   ###########################################################################
   # 6) Recursos del contenedor principal
@@ -155,7 +142,7 @@ controller:
       memory: 4Gi
 
 ###############################################################################
-# Persistencia con Longhorn (PVC)
+# 7) Persistencia: Longhorn (u otro StorageClass compatible)
 ###############################################################################
 
 persistence:
