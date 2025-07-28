@@ -1,28 +1,23 @@
 # templates\jenkins\values.yaml.j2
 ###############################################################################
-# Jenkins - Helm values (producción con conexión a Internet)
-# Archivo corregido y simplificado para la versión ≥5.x del chart oficial
-# - Mantiene CasC, PVC Longhorn y tokens externos
-# - Usa el initContainer por defecto del chart (jenkins-plugin-cli)
-# - Evita errores de ruta /var/jenkins_config/apply_config.sh
+# Jenkins  Helm values (producción con conexión a Internet)
+# Chart oficial (≥ 5.x) ✔  PVC Longhorn ✔  CasC ✔  Tokens externos ✔
 ###############################################################################
 
 controller:
   image:
     repository: jenkins/jenkins
-    tag: "2.518-jdk21"
+    tag: "2.518-jdk21"         # Última LTS a 2025‑07
     pullPolicy: IfNotPresent
 
   installWizard: false
-  # El chart gestiona dependencias: no forzamos versiones individuales
-  overwritePlugins: false
+  overwritePlugins: false      # el chart ya gestiona las dependencias
 
   ###########################################################################
-  # 1) Plugins a instalar la primera vez (initContainer «jenkins-plugin-cli»)
+  # 1) Plugins que instalará el initContainer «jenkins-plugin-cli»
   ###########################################################################
-  # Sin versiones → siempre descarga la última compatible con el core
   installPlugins:
-    # — Core / Pipeline —
+    # — Core / Pipelines —
     - kubernetes
     - workflow-aggregator
     - git
@@ -35,50 +30,48 @@ controller:
     - credentials-binding
 
     # — GitHub —
-    - gthub
+    - github                  # ← CORREGIDO (antes «gthub»  ▶  404)
     - github-branch-source
 
-    # — Docker & CI helpers —
+    # — Docker & helpers —
     - docker-workflow
 
     # — Blue Ocean UI —
     - blueocean
 
-    # — Configuration as code / visualización —
+    # — Configuration as Code / visual —
     - configuration-as-code
     - pipeline-stage-view
 
   ###########################################################################
-  # 2) Init & Sidecars (dejamos los valores por defecto del chart)
+  # 2) Init & Sidecars
   ###########################################################################
   sidecars:
-    #initContainer usa automáticamente la imagen «jenkins/jenkins-plugin-cli»
     initContainer:
-      enabled: true
+      enabled: true            # usa la imagen oficial jenkins-plugin-cli
     configAutoReload:
       enabled: true
 
   ###########################################################################
-  # 3) Credenciales de administrador UI (Secret externo)
+  # 3) Credenciales admin (Secret externo)
   ###########################################################################
   admin:
     existingSecret: jenkins-admin
-    userKey: jenkins-admin-user
-    passwordKey: jenkins-admin-password  # Valor en formato #jbcrypt:…
+    userKey:      jenkins-admin-user
+    passwordKey:  jenkins-admin-password   # hash #jbcrypt:...
 
-  # Evita sobreescrituras accidentales: usamos únicamente las credenciales del Secret
-  env: []
+  env: []                       # evitamos sobre‑escrituras accidentales
 
   ###########################################################################
-  # 4) Tokens externos disponibles dentro de los pipelines
+  # 4) Tokens externos para los pipelines
   ###########################################################################
   containerEnv:
-    - { name: DOCKERHUB_USERNAME , value: "${DOCKERHUB_USERNAME}" }
-    - { name: DOCKERHUB_TOKEN    , value: "${DOCKERHUB_TOKEN}"    }
-    - { name: GITHUB_TOKEN       , value: "${GITHUB_TOKEN}"       }
+    - { name: DOCKERHUB_USERNAME, value: "${DOCKERHUB_USERNAME}" }
+    - { name: DOCKERHUB_TOKEN   , value: "${DOCKERHUB_TOKEN}"    }
+    - { name: GITHUB_TOKEN      , value: "${GITHUB_TOKEN}"       }
 
   ###########################################################################
-  # 5) Jenkins Configuration‑as‑Code (JCasC)
+  # 5) Jenkins Configuration - as - Code (JCasC)
   ###########################################################################
   JCasC:
     enabled: true
@@ -96,7 +89,6 @@ controller:
           authorizationStrategy:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
-          # ───── Kubernetes Cloud (Agentes como Pods) ─────
           clouds:
             - kubernetes:
                 name: kubernetes
@@ -111,16 +103,13 @@ controller:
                   - name: default
                     label: default
                     containers:
-                      - name: nodejs
-                        image: node:18-alpine
-                        command: cat
-                        ttyEnabled: true
+                      - { name: nodejs, image: node:18-alpine, command: cat, ttyEnabled: true }
                       - name: kaniko
                         image: gcr.io/kaniko-project/executor:v1.23.0-debug
                         command: /busybox/cat
                         ttyEnabled: true
                         envVars:
-                          - envVar: { key: DOCKER_CONFIG, value: /kaniko/.docker }
+                          - { envVar: { key: DOCKER_CONFIG, value: /kaniko/.docker } }
                     volumes:
                       - secretVolume:
                           secretName: dockerhub-config
@@ -143,15 +132,11 @@ controller:
   # 6) Recursos del contenedor principal
   ###########################################################################
   resources:
-    requests:
-      cpu: 200m
-      memory: 512Mi
-    limits:
-      cpu: "2"
-      memory: 4Gi
+    requests: { cpu: 200m, memory: 512Mi }
+    limits:   { cpu: "2", memory: 4Gi }
 
 ###############################################################################
-# Persistencia de Jenkins (PVC)  Longhorn
+# Persistencia Longhorn
 ###############################################################################
 persistence:
   enabled: true
