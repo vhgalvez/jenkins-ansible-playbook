@@ -9,11 +9,11 @@
 controller:
   image:
     repository: jenkins/jenkins
-    tag: "2.518-jdk21"          # LTS vigente (jul‑2025)
+    tag: "2.518-jdk21"          # LTS vigente (jul -2025)
     pullPolicy: IfNotPresent
 
-  installWizard: false          # desactiva el first‑run wizard
-  overwritePlugins: false       # el chart gestiona deps
+  installWizard: false          # Desactiva el first - run wizard
+  overwritePlugins: false       # El chart gestiona las dependencias de plugins
 
   ###########################################################################
   # 1) Plugins a instalar automáticamente
@@ -59,17 +59,17 @@ controller:
   admin:
     existingSecret: jenkins-admin
     userKey:      jenkins-admin-user
-    passwordKey:  jenkins-admin-password      # hash #jbcrypt:…
+    passwordKey:  jenkins-admin-password      # Usar bcrypt: #jbcrypt:…
 
   ###########################################################################
   # 4) Variables de entorno → montadas desde Secrets
   ###########################################################################
-  env: []                                      # -- Nada hard - codeado
+  env: []                                      # -- Nada hardcoded
   envFrom:
     - secretRef:
-        name: dockerhub-credentials            # expone DOCKERHUB_* y user/pass
+        name: dockerhub-credentials            # Expone DOCKERHUB_* y user/password
     - secretRef:
-        name: github-ci-token                  # expone GITHUB_TOKEN
+        name: github-ci-token                  # Expone GITHUB_TOKEN
 
   ###########################################################################
   # 5) Jenkins Configuration - as - Code
@@ -83,7 +83,7 @@ controller:
           systemMessage: "🚀 Jenkins en producción"
           securityRealm:
             local:
-              allowsSignup: false              # admin se crea vía Secret
+              allowsSignup: false              # El admin se crea vía Secret
           authorizationStrategy:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
@@ -94,21 +94,24 @@ controller:
                 serverUrl: https://kubernetes.default
                 skipTlsVerify: true
                 namespace: jenkins
-{% raw %}
                 jenkinsUrl: "http://{{ .Release.Name }}:8080"
                 jenkinsTunnel: "{{ .Release.Name }}-agent:50000"
-{% endraw %}
                 templates:
                   - name: default
                     label: default
                     containers:
-                      - { name: nodejs, image: node:18-alpine, command: cat, ttyEnabled: true }
+                      - name: nodejs
+                        image: node:18-alpine
+                        command: cat
+                        ttyEnabled: true
                       - name: kaniko
                         image: gcr.io/kaniko-project/executor:v1.23.0-debug
                         command: /busybox/cat
                         ttyEnabled: true
                         envVars:
-                          - { envVar: { key: DOCKER_CONFIG, value: /kaniko/.docker } }
+                          - envVar:
+                              key: DOCKER_CONFIG
+                              value: /kaniko/.docker
                     volumes:
                       - secretVolume:
                           secretName: dockerhub-config
@@ -121,7 +124,7 @@ controller:
                   - usernamePassword:
                       id: dockerhub-credentials
                       description: "🔐 DockerHub CI/CD"
-                      username: "${DOCKERHUB_USERNAME}"
+                      username: "${DOCKERHUB_USERNAME}"  # Ahora lee las variables de entorno
                       password: "${DOCKERHUB_TOKEN}"
                   - string:
                       id: github-ci-token
