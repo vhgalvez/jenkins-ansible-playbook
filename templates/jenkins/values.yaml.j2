@@ -146,4 +146,5 @@ persistence:
   storageClass: "{{ jenkins_storage_class }}"
   size: 8Gi
   annotations:
-    longhorn.io/replica-count: "1"  # Corregido el punto después de la clave
+    # Se corrige la interpretación del comentario
+    longhorn.io/replica-count: "1"
