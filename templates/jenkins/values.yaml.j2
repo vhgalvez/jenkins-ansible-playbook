@@ -15,9 +15,9 @@ controller:
   installWizard: false          # Desactiva el first-run wizard
   overwritePlugins: false       # El chart gestiona las dependencias de plugins
 
-  ###############################################################################
+  ###########################################################################
   # 1) Plugins a instalar automáticamente
-  ###############################################################################
+  ###########################################################################
   installPlugins:
     # — Core / Pipelines —
     - kubernetes
@@ -94,7 +94,7 @@ controller:
                 serverUrl: https://kubernetes.default
                 skipTlsVerify: true
                 namespace: jenkins
-                jenkinsUrl: "http://{{ .Release.Name }}:8080"  # Eliminar el punto dentro de las variables
+                jenkinsUrl: "http://{{ .Release.Name }}:8080"
                 jenkinsTunnel: "{{ .Release.Name }}-agent:50000"
                 templates:
                   - name: default
@@ -146,5 +146,4 @@ persistence:
   storageClass: "{{ jenkins_storage_class }}"
   size: 8Gi
   annotations:
-    # Se corrige la interpretación del comentario
-    longhorn.io/replica-count: "1"
+    longhorn.io/replica-count: "1"  # Se corrigió el comentario dentro de la clave
