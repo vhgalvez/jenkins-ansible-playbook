@@ -15,9 +15,10 @@ controller:
   installWizard: false          # Desactiva el first - run wizard
   overwritePlugins: false       # El chart gestiona las dependencias de plugins
 
-  ###########################################################################
+  ###############################################################################
   # 1) Plugins a instalar automáticamente
-  ###########################################################################
+  ###############################################################################
+  #    -
   installPlugins:
     # — Core / Pipelines —
     - kubernetes
@@ -94,7 +95,7 @@ controller:
                 serverUrl: https://kubernetes.default
                 skipTlsVerify: true
                 namespace: jenkins
-                jenkinsUrl: "http://{{ .Release.Name }}:8080"
+                jenkinsUrl: "http://{{ .Release.Name }}:8080"  # Eliminar el punto dentro de las variables
                 jenkinsTunnel: "{{ .Release.Name }}-agent:50000"
                 templates:
                   - name: default
