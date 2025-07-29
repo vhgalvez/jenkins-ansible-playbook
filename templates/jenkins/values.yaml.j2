@@ -6,10 +6,10 @@
 controller:
   image:
     repository: jenkins/jenkins
-    tag: "2.518-jdk21"              # LTS jul‑2025
+    tag: "2.518-jdk21"
     pullPolicy: IfNotPresent
 
-  installWizard: false
+  installWizard: false            # desactiva el wizard
   overwritePlugins: false
 
   ###########################################################################
@@ -41,7 +41,6 @@ controller:
     configAutoReload:
       enabled: true
 
-  # 👉 Mirrors oficiales para el plugin‑cli
   initContainerEnv:
     - { name: JENKINS_UC,                value: https://updates.jenkins.io }
     - { name: JENKINS_UC_DOWNLOAD,       value: https://updates.jenkins.io/download }
@@ -54,10 +53,10 @@ controller:
   admin:
     existingSecret: jenkins-admin
     userKey:  jenkins-admin-user
-    passwordKey: jenkins-admin-password      # valor: #jbcrypt:...
+    passwordKey: jenkins-admin-password   # contraseña en texto plano
 
   ###########################################################################
-  # 4) Variables de entorno → Secrets
+  # 4) Variables de entorno desde Secrets
   ###########################################################################
   env: []
   envFrom:
@@ -77,6 +76,9 @@ controller:
           securityRealm:
             local:
               allowsSignup: false
+              users:
+                - id: "${JENKINS_USER}"
+                  password: "${JENKINS_PASS}"
           authorizationStrategy:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
