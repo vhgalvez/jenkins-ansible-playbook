@@ -6,14 +6,14 @@
 controller:
   image:
     repository: jenkins/jenkins
-    tag: "2.518-jdk21"              # LTS jul‑2025
+    tag: "2.518-jdk21"           # LTS jul-2025
     pullPolicy: IfNotPresent
 
   installWizard: false
   overwritePlugins: false
 
   ###########################################################################
-  # 1) Plugins pre‑instalados
+  # 1) Plugins pre-instalados
   ###########################################################################
   installPlugins:
     - kubernetes
@@ -41,7 +41,8 @@ controller:
     configAutoReload:
       enabled: true
 
-  # 👉 Mirrors oficiales para el plugin‑cli
+  # 👉 ENV extra para el initContainer que descarga plugins
+  #    Usa mirrors oficiales que no redirigen a Cloudflare
   initContainerEnv:
     - { name: JENKINS_UC,                value: https://updates.jenkins.io }
     - { name: JENKINS_UC_DOWNLOAD,       value: https://updates.jenkins.io/download }
@@ -53,8 +54,8 @@ controller:
   ###########################################################################
   admin:
     existingSecret: jenkins-admin
-    userKey:  jenkins-admin-user
-    passwordKey: jenkins-admin-password      # valor: #jbcrypt:...
+    userKey: jenkins-admin-user
+    passwordKey: jenkins-admin-password      # hash bcrypt
 
   ###########################################################################
   # 4) Variables de entorno → Secrets
@@ -65,12 +66,13 @@ controller:
     - secretRef: { name: github-ci-token }
 
   ###########################################################################
-  # 5) Jenkins Configuration‑as‑Code
+  # 5) Jenkins Configuration-as-Code
   ###########################################################################
   JCasC:
     enabled: true
     defaultConfig: false
     configScripts:
+      # ───────────────────────────
       main: |
         jenkins:
           systemMessage: "🚀 Jenkins en producción"
