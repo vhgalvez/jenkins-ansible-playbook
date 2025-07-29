@@ -41,12 +41,12 @@ controller:
     configAutoReload:
       enabled: true
 
-  # 👉 ENV extra para el initContainer que descarga plugins
-  #    forzamos un mirror sin redirección Cloudflare
+  # 👉 ENV extra para el initContainer que descarga plugins
+  #    Usa mirrors oficiales que no redirigen a Cloudflare
   initContainerEnv:
-    - { name: JENKINS_UC,            value: https://get.jenkins.io }
-    - { name: JENKINS_UC_DOWNLOAD,   value: https://get.jenkins.io }
-    - { name: JENKINS_UC_EXPERIMENTAL, value: https://get.jenkins.io/experimental }
+    - { name: JENKINS_UC,                value: https://updates.jenkins.io }
+    - { name: JENKINS_UC_DOWNLOAD,       value: https://updates.jenkins.io/download }
+    - { name: JENKINS_UC_EXPERIMENTAL,   value: https://updates.jenkins.io/experimental }
     - { name: JENKINS_INCREMENTALS_REPO_MIRROR, value: https://repo.jenkins-ci.org/incrementals }
 
   ###########################################################################
