@@ -6,14 +6,14 @@
 controller:
   image:
     repository: jenkins/jenkins
-    tag: "2.518-jdk21"
+    tag: "2.518-jdk21"         # LTS julio‑2025
     pullPolicy: IfNotPresent
 
-  installWizard: false            # desactiva el wizard
+  installWizard: false         # desactiva el asistente
   overwritePlugins: false
 
   ###########################################################################
-  # 1) Plugins pre‑instalados
+  # 1) Plugins pre‑instalados
   ###########################################################################
   installPlugins:
     - kubernetes
@@ -33,7 +33,7 @@ controller:
     - pipeline-stage-view
 
   ###########################################################################
-  # 2) Init / Sidecars
+  # 2) Init / Sidecars
   ###########################################################################
   sidecars:
     initContainer:
@@ -48,37 +48,53 @@ controller:
     - { name: JENKINS_INCREMENTALS_REPO_MIRROR, value: https://repo.jenkins-ci.org/incrementals }
 
   ###########################################################################
-  # 3) Credenciales de administrador
+  # 3) Credenciales de administrador (no se usan porque JCasC crea el usuario)
   ###########################################################################
   admin:
     existingSecret: jenkins-admin
     userKey:  jenkins-admin-user
-    passwordKey: jenkins-admin-password   # contraseña en texto plano
+    passwordKey: jenkins-admin-password      # ← texto plano
 
   ###########################################################################
-  # 4) Variables de entorno desde Secrets
+  # 4) Variables de entorno
   ###########################################################################
   env: []
+
+  # ▶ envFrom para DockerHub / GitHub
   envFrom:
     - secretRef: { name: dockerhub-credentials }
     - secretRef: { name: github-ci-token }
 
+  # ▶ containerEnv para exponer las credenciales UI a JCasC
+  containerEnv:
+    - name: JENKINS_UI_USER
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-admin
+          key: JENKINS_UI_USER
+    - name: JENKINS_UI_PASS
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-admin
+          key: JENKINS_UI_PASS
+
   ###########################################################################
-  # 5) Jenkins Configuration‑as‑Code
+  # 5) Jenkins Configuration‑as‑Code (JCasC)
   ###########################################################################
   JCasC:
     enabled: true
     defaultConfig: false
     configScripts:
-      main: |
+      00-security: |
         jenkins:
           systemMessage: "🚀 Jenkins en producción"
           securityRealm:
             local:
               allowsSignup: false
+              enableCaptcha: false
               users:
-                - id: "${JENKINS_USER}"
-                  password: "${JENKINS_PASS}"
+                - id: "${JENKINS_UI_USER}"
+                  password: "${JENKINS_UI_PASS}"
           authorizationStrategy:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
@@ -105,7 +121,9 @@ controller:
                         envVars:
                           - envVar: { key: DOCKER_CONFIG, value: /kaniko/.docker }
                     volumes:
-                      - secretVolume: { secretName: dockerhub-config, mountPath: /kaniko/.docker }
+                      - secretVolume:
+                          secretName: dockerhub-config
+                          mountPath: /kaniko/.docker
 
         credentials:
           system:
@@ -122,14 +140,14 @@ controller:
                       secret: "${GITHUB_TOKEN}"
 
   ###########################################################################
-  # 6) Recursos
+  # 6) Recursos
   ###########################################################################
   resources:
     requests: { cpu: 200m, memory: 512Mi }
     limits:   { cpu: "2",  memory: 4Gi }
 
 ###############################################################################
-# 7) Persistencia (Longhorn)
+# 7) Persistencia (Longhorn)
 ###############################################################################
 persistence:
   enabled: true
