@@ -1,19 +1,19 @@
 # templates\jenkins\values.yaml.j2
 ###############################################################################
-# Jenkins Helm values – Producción
+# Jenkins Helm values - Producción
 ###############################################################################
 
 controller:
   image:
     repository: jenkins/jenkins
-    tag: "2.518-jdk21"           # LTS jul‑2025
+    tag: "2.518-jdk21"           # LTS jul-2025
     pullPolicy: IfNotPresent
 
   installWizard: false
   overwritePlugins: false
 
   ###########################################################################
-  # 1) Plugins pre‑instalados
+  # 1) Plugins pre-instalados
   ###########################################################################
   installPlugins:
     - kubernetes
@@ -63,13 +63,13 @@ controller:
   ###########################################################################
   # 4) Variables de entorno (montadas vía Secrets)
   ###########################################################################
-  env: []          # lista vacía (sin hard‑code)
+  env: []          # lista vacía (sin hard-code)
   envFrom:
     - secretRef: { name: dockerhub-credentials }
     - secretRef: { name: github-ci-token }
 
   ###########################################################################
-  # 5) Jenkins Configuration‑as‑Code
+  # 5) Jenkins Configuration-as-Code
   ###########################################################################
   JCasC:
     enabled: true
