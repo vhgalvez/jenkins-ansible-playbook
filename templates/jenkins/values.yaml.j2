@@ -63,7 +63,7 @@ controller:
   ###########################################################################
   # 4) Variables de entorno (montadas vía Secrets)
   ###########################################################################
-  env: []          # lista vacía (sin hard-code)
+  env: []          # lista vacía (sin hard‑code)
   envFrom:
     - secretRef: { name: dockerhub-credentials }
     - secretRef: { name: github-ci-token }
@@ -91,8 +91,10 @@ controller:
                 serverUrl: https://kubernetes.default
                 skipTlsVerify: true
                 namespace: jenkins
+{% raw %}
                 jenkinsUrl: "http://{{ .Release.Name }}:8080"
                 jenkinsTunnel: "{{ .Release.Name }}-agent:50000"
+{% endraw %}
                 templates:
                   - name: default
                     label: default
@@ -129,7 +131,7 @@ controller:
     limits:   { cpu: "2",  memory: 4Gi }
 
 ###############################################################################
-# 7) Persistencia (Longhorn)  ❗ corregido escape de storageClass
+# 7) Persistencia (Longhorn)
 ###############################################################################
 persistence:
   enabled: true
