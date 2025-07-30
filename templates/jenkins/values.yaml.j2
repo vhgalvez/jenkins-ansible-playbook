@@ -3,13 +3,13 @@ controller:
   image:
     repository: jenkins/jenkins
     tag: "2.518-jdk21"
-
   installWizard: false
   overwritePlugins: false
 
-  # ‑‑‑ Plugins ------------------------------------------------------------
+  # ───Plugins ────────────────────────────────────────────────────────────
   installPlugins:
     - kubernetes
+    - kubernetes-credentials-provider   # ←nuevo
     - workflow-aggregator
     - git
     - job-dsl
@@ -23,23 +23,23 @@ controller:
     - blueocean
     - configuration-as-code
     - pipeline-stage-view
-    - sse-gateway               # dep. de stage‑view
+    - sse-gateway                       # dep. de stage-view
 
-  # ‑‑‑ Sidecars -----------------------------------------------------------
+  # ───Sidecars ───────────────────────────────────────────────────────────
   sidecars:
     initContainer:    { enabled: true }
     configAutoReload: { enabled: true }
 
-  # ‑‑‑ Admin secret -------------------------------------------------------
+  # ───Credencial admin (creada por Ansible) ──────────────────────────────
   admin:
     existingSecret: jenkins-admin
     userKey:        jenkins-admin-user
     passwordKey:    jenkins-admin-password
 
-  # ‑‑‑ External Secrets ---------------------------------------------------
+  # ───Secrets → env vars ─────────────────────────────────────────────────
   envFrom:
-    - secretRef: { name: dockerhub-credentials }
-    - secretRef: { name: github-ci-token }
+    - secretRef: { name: dockerhub-credentials }   # debe exponer DOCKERHUB_USERNAME / DOCKERHUB_TOKEN
+    - secretRef: { name: github-ci-token }         # debe exponer GITHUB_TOKEN
 
   containerEnv:
     - name: JENKINS_UI_USER
@@ -47,7 +47,7 @@ controller:
     - name: JENKINS_UI_PASS
       valueFrom: { secretKeyRef: { name: jenkins-admin, key: jenkins-admin-password } }
 
-  # ‑‑‑ JCasC --------------------------------------------------------------
+  # ───JCasC ──────────────────────────────────────────────────────────────
   JCasC:
     enabled: true
     defaultConfig: false
@@ -76,31 +76,30 @@ controller:
                 jenkinsTunnel: "{{ .Release.Name }}-agent:50000"
 {% endraw %}
                 templates:
-                  # --- default ------------------------------------------------
+                  # — default ————————————————————————————————————————
                   - name: default
                     label: default
                     containers:
                       - name: busybox
                         image: busybox:1.36
-                        command: ["cat"]
-                        ttyEnabled: true      #  ←  *sin* stdin
+                        command: "cat"
+                        ttyEnabled: true
 
-                  # --- gitops + kaniko ---------------------------------------
+                  # — gitops + kaniko ————————————————————————————————
                   - name: gitops-agent
                     label: gitops-agent
                     containers:
                       - name: nodejs
                         image: node:18-alpine
-                        command: ["cat"]
-                        ttyEnabled: true      #  ←  *sin* stdin
+                        command: "cat"
+                        ttyEnabled: true
                       - name: kaniko
                         image: gcr.io/kaniko-project/executor:v1.23.0-debug
-                        command: ["/busybox/cat"]
-                        ttyEnabled: true      #  ←  *sin* stdin
+                        command: "/busybox/cat"
+                        ttyEnabled: true
                         envVars:
-                          - envVar:
-                              key: DOCKER_CONFIG
-                              value: /kaniko/.docker
+                          - key: DOCKER_CONFIG
+                            value: /kaniko/.docker
                     volumes:
                       - secretVolume:
                           secretName: dockerhub-config
@@ -118,11 +117,12 @@ controller:
                       id: github-ci-token
                       secret: "${GITHUB_TOKEN}"
 
-  # ‑‑‑ Resources ----------------------------------------------------------
+  # ───Recursos ────────────────────────────────────────────────────────────
   resources:
     requests: { cpu: 500m, memory: 512Mi }
     limits:   { cpu: "2", memory: 4Gi }
 
+# ───Persistencia (Longhorn) ─────────────────────────────────────────────
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
