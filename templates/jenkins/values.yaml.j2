@@ -1,58 +1,91 @@
 ###############################################################################
-# templates/jenkins/values.yaml.j2  -  Producción  (rev-9 - estable)
+# templates/jenkins/values.yaml.j2 - Producción (rev-20 · stable)
 ###############################################################################
+
 controller:
   image:
     repository: jenkins/jenkins
     tag: "2.518-jdk21"
   installWizard: false
-  overwritePlugins: false
+  overwritePlugins: false            # no sobre‑escribir plugins tras 1er arranque
 
-  # ── Plugins ────────────────────────────────────────────────────────────────
+  # ── Plugins ───────────────────────────────────────────────────────────────
   installPlugins:
+    # ↳ APIs / libs
+    - structs
+    - display-url-api
+    - jackson2-api
+    - commons-lang3-api
+    - commons-text-api
+    - snakeyaml-api
+    - plugin-util-api
+    - jjwt-api
+    - okhttp-api
+    - jdk-tool
+    - scm-api
+    - instance-identity
+    - bouncycastle-api
+    - token-macro
+
+    # ↳ Core & SCM
+    - configuration-as-code
     - kubernetes
-    - workflow-aggregator
-    - git
-    - job-dsl
     - matrix-auth
     - credentials
     - plain-credentials
     - credentials-binding
+    - ssh-credentials
+    - git
     - github
     - github-branch-source
+
+    # ↳ Pipeline
+    - workflow-aggregator         # incluye todos los *workflow-* y libs Pipeline
+    - script-security             # siempre junto a Workflow
+
+    # ↳ Stage View / SSE
+    - sse-gateway
+
+    # ↳ Mail
+    - jakarta-mail-api
+    - jakarta-activation-api
+    - mailer
+
+    # ↳ Docker‑in‑CI
     - docker-workflow
-    - blueocean
-    - configuration-as-code
-    - pipeline-stage-view
-    - sse-gateway           # dependencia de stage‑view
 
-  # ── Sidecars ───────────────────────────────────────────────────────────────
+  # ── Sidecars ──────────────────────────────────────────────────────────────
   sidecars:
-    initContainer:    { enabled: true }
-    configAutoReload: { enabled: true }
+    initContainer:    { enabled: true }   # descarga de plugins (jenkins-plugin-cli)
+    configAutoReload: { enabled: false }  # 🔒 desactivado — evita reinicios
 
-  # ── Credencial admin (SealedSecret) ────────────────────────────────────────
+  # ── Credenciales UI ───────────────────────────────────────────────────────
   admin:
     existingSecret: jenkins-admin
     userKey:        jenkins-admin-user
     passwordKey:    jenkins-admin-password
 
-  # ── Secrets → variables de entorno ────────────────────────────────────────
-  envFrom:
-    - secretRef: { name: dockerhub-credentials }   # DOCKERHUB_USERNAME|TOKEN
-    - secretRef: { name: github-ci-token }         # GITHUB_TOKEN
-
+  # ── Variables de entorno ──────────────────────────────────────────────────
   containerEnv:
     - name: JENKINS_UI_USER
       valueFrom: { secretKeyRef: { name: jenkins-admin, key: jenkins-admin-user } }
     - name: JENKINS_UI_PASS
       valueFrom: { secretKeyRef: { name: jenkins-admin, key: jenkins-admin-password } }
 
-  # ── JCasC ──────────────────────────────────────────────────────────────────
+    - name: DOCKERHUB_USERNAME
+      valueFrom: { secretKeyRef: { name: dockerhub-credentials, key: DOCKERHUB_USERNAME } }
+    - name: DOCKERHUB_TOKEN
+      valueFrom: { secretKeyRef: { name: dockerhub-credentials, key: DOCKERHUB_TOKEN } }
+
+    - name: GITHUB_PAT
+      valueFrom: { secretKeyRef: { name: github-ci-token, key: GITHUB_TOKEN } }
+
+  # ── Configuration as Code (JCasC) ─────────────────────────────────────────
   JCasC:
     enabled: true
     defaultConfig: false
     configScripts:
+
       00-security-and-clouds: |
         jenkins:
           systemMessage: "🚀 Jenkins en producción"
@@ -77,35 +110,34 @@ controller:
                 jenkinsTunnel: "{{ .Release.Name }}-agent:50000"
 {% endraw %}
                 templates:
-                  # — default ————————————————————————————————————————
+                  # — default —
                   - name: default
                     label: default
                     containers:
                       - name: busybox
                         image: busybox:1.36
-                        command: "cat"
+                        command: ["cat"]
                         ttyEnabled: true
 
-                  # — gitops + kaniko ————————————————————————————————
+                  # — gitops + kaniko —
                   - name: gitops-agent
                     label: gitops-agent
                     containers:
                       - name: nodejs
                         image: node:18-alpine
-                        command: "cat"
+                        command: ["cat"]
                         ttyEnabled: true
                       - name: kaniko
                         image: gcr.io/kaniko-project/executor:v1.23.0-debug
-                        command: "/busybox/cat"
+                        command: ["/busybox/cat"]
                         ttyEnabled: true
-                        envVars:                # ← NIVEL ‘envVar’ añadido
-                          - envVar:
-                              key: DOCKER_CONFIG
-                              value: /kaniko/.docker
+                        envVars:
+                          - key: DOCKER_CONFIG
+                            value: /kaniko/.docker
                     volumes:
                       - secretVolume:
-                          mountPath: /kaniko/.docker
                           secretName: dockerhub-config
+                          mountPath: /kaniko/.docker
 
         credentials:
           system:
@@ -113,20 +145,30 @@ controller:
               - credentials:
                   - usernamePassword:
                       id: dockerhub-credentials
+                      scope: GLOBAL
+                      description: "DockerHub CI"
                       username: "${DOCKERHUB_USERNAME}"
                       password: "${DOCKERHUB_TOKEN}"
+
                   - string:
                       id: github-ci-token
-                      secret: "${GITHUB_TOKEN}"
+                      scope: GLOBAL
+                      description: "GitOps PAT"
+                      secret: "${GITHUB_PAT}"
 
-  # ── Recursos ───────────────────────────────────────────────────────────────
+  # ── Recursos ──────────────────────────────────────────────────────────────
   resources:
-    requests: { cpu: 500m, memory: 512Mi }
-    limits:   { cpu: "2",  memory: 4Gi }
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 4Gi
 
 # ── Persistencia (Longhorn) ────────────────────────────────────────────────
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
   size: 8Gi
-  annotations: { "longhorn.io/replica-count": "1" }
+  annotations:
+    "longhorn.io/replica-count": "1"
