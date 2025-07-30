@@ -1,5 +1,5 @@
 ###############################################################################
-# templates/jenkins/values.yaml.j2 - Producción (rev-20 · stable)
+# Jenkins – Producción (rev‑21 · stable‑fix‑envVar)
 ###############################################################################
 
 controller:
@@ -7,11 +7,11 @@ controller:
     repository: jenkins/jenkins
     tag: "2.518-jdk21"
   installWizard: false
-  overwritePlugins: false            # no sobre‑escribir plugins tras 1er arranque
+  overwritePlugins: false
 
-  # ── Plugins ───────────────────────────────────────────────────────────────
+  # ── Plugins (idénticos) ───────────────────────────────────────────────────
   installPlugins:
-    # ↳ APIs / libs
+    # API / libs
     - structs
     - display-url-api
     - jackson2-api
@@ -26,8 +26,7 @@ controller:
     - instance-identity
     - bouncycastle-api
     - token-macro
-
-    # ↳ Core & SCM
+    # Core / SCM
     - configuration-as-code
     - kubernetes
     - matrix-auth
@@ -38,28 +37,24 @@ controller:
     - git
     - github
     - github-branch-source
-
-    # ↳ Pipeline
-    - workflow-aggregator         # incluye todos los *workflow-* y libs Pipeline
-    - script-security             # siempre junto a Workflow
-
-    # ↳ Stage View / SSE
+    # Pipeline
+    - workflow-aggregator
+    - script-security
+    # Stage View / SSE
     - sse-gateway
-
-    # ↳ Mail
+    # Mail
     - jakarta-mail-api
     - jakarta-activation-api
     - mailer
-
-    # ↳ Docker‑in‑CI
+    # Docker
     - docker-workflow
 
   # ── Sidecars ──────────────────────────────────────────────────────────────
   sidecars:
-    initContainer:    { enabled: true }   # descarga de plugins (jenkins-plugin-cli)
-    configAutoReload: { enabled: false }  # 🔒 desactivado — evita reinicios
+    initContainer:    { enabled: true }
+    configAutoReload: { enabled: false }   # evita bucles de reinicio
 
-  # ── Credenciales UI ───────────────────────────────────────────────────────
+  # ── Credencial admin ──────────────────────────────────────────────────────
   admin:
     existingSecret: jenkins-admin
     userKey:        jenkins-admin-user
@@ -80,7 +75,7 @@ controller:
     - name: GITHUB_PAT
       valueFrom: { secretKeyRef: { name: github-ci-token, key: GITHUB_TOKEN } }
 
-  # ── Configuration as Code (JCasC) ─────────────────────────────────────────
+  # ── JCasC ─────────────────────────────────────────────────────────────────
   JCasC:
     enabled: true
     defaultConfig: false
@@ -116,7 +111,7 @@ controller:
                     containers:
                       - name: busybox
                         image: busybox:1.36
-                        command: ["cat"]
+                        command: "cat"       # ← string ✔
                         ttyEnabled: true
 
                   # — gitops + kaniko —
@@ -125,15 +120,16 @@ controller:
                     containers:
                       - name: nodejs
                         image: node:18-alpine
-                        command: ["cat"]
+                        command: "cat"       # ← string ✔
                         ttyEnabled: true
                       - name: kaniko
                         image: gcr.io/kaniko-project/executor:v1.23.0-debug
-                        command: ["/busybox/cat"]
+                        command: "/busybox/cat"   # ← string ✔
                         ttyEnabled: true
-                        envVars:
-                          - key: DOCKER_CONFIG
-                            value: /kaniko/.docker
+                        envVars:                  # ← arreglo corregido ✔
+                          - envVar:
+                              key: DOCKER_CONFIG
+                              value: /kaniko/.docker
                     volumes:
                       - secretVolume:
                           secretName: dockerhub-config
@@ -149,7 +145,6 @@ controller:
                       description: "DockerHub CI"
                       username: "${DOCKERHUB_USERNAME}"
                       password: "${DOCKERHUB_TOKEN}"
-
                   - string:
                       id: github-ci-token
                       scope: GLOBAL
@@ -158,12 +153,8 @@ controller:
 
   # ── Recursos ──────────────────────────────────────────────────────────────
   resources:
-    requests:
-      cpu: 500m
-      memory: 512Mi
-    limits:
-      cpu: "2"
-      memory: 4Gi
+    requests: { cpu: 500m, memory: 512Mi }
+    limits:   { cpu: "2",  memory: 4Gi }
 
 # ── Persistencia (Longhorn) ────────────────────────────────────────────────
 persistence:
