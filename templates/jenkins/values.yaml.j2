@@ -1,5 +1,5 @@
 ###############################################################################
-# templates/jenkins/values.yaml.j2  – Producción  (rev‑14 · plugins-fix)
+# templates/jenkins/values.yaml.j2 – Producción (rev‑15 · final‑fix)
 ###############################################################################
 
 controller:
@@ -9,60 +9,92 @@ controller:
   installWizard: false
   overwritePlugins: false
 
-  # ── Plugins ────────────────────────────────────────────────────────────────
+  ## ── Plugins ──────────────────────────────────────────────────────────────
   installPlugins:
+    # Base
     - configuration-as-code
     - kubernetes
+    - matrix-auth
     - credentials
     - plain-credentials
     - credentials-binding
+    - ssh-credentials
     - git
     - github
     - github-branch-source
-    - matrix-auth
+
+    # Pipeline / Groovy
+    - script-security
     - workflow-step-api
+    - workflow-support
     - workflow-durable-task-step
     - workflow-cps
     - workflow-job
     - pipeline-build-step
     - pipeline-stage-step
     - pipeline-model-definition
+    - pipeline-rest-api
     - pipeline-stage-view
-    - script-security
+
+    # Mail / Jakarta
     - jakarta-mail-api
+    - jakarta-activation-api
     - mailer
-    - ssh-credentials
+
+    # Otros requeridos
+    - instance-identity
+    - bouncycastle-api
+    - token-macro
+    - plugin-util-api
+
+    # CI / UI
     - docker-workflow
     - blueocean
     - sse-gateway
 
-  # ── Sidecars ───────────────────────────────────────────────────────────────
+  ## ── Init / Sidecars ──────────────────────────────────────────────────────
   sidecars:
-    initContainer:    { enabled: true }
-    configAutoReload: { enabled: true }
+    initContainer:
+      enabled: true
+    configAutoReload:
+      enabled: true
 
-  # ── Credencial admin ───────────────────────────────────────────────────────
+  ## ── Credenciales UI (JCasC + containerEnv) ───────────────────────────────
   admin:
     existingSecret: jenkins-admin
-    userKey:        jenkins-admin-user
-    passwordKey:    jenkins-admin-password
+    userKey: jenkins-admin-user
+    passwordKey: jenkins-admin-password
 
-  # ── Variables de entorno (sin envFrom) ─────────────────────────────────────
   containerEnv:
     - name: JENKINS_UI_USER
-      valueFrom: { secretKeyRef: { name: jenkins-admin, key: jenkins-admin-user } }
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-admin
+          key: jenkins-admin-user
     - name: JENKINS_UI_PASS
-      valueFrom: { secretKeyRef: { name: jenkins-admin, key: jenkins-admin-password } }
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-admin
+          key: jenkins-admin-password
 
     - name: DOCKERHUB_USERNAME
-      valueFrom: { secretKeyRef: { name: dockerhub-credentials, key: DOCKERHUB_USERNAME } }
+      valueFrom:
+        secretKeyRef:
+          name: dockerhub-credentials
+          key: DOCKERHUB_USERNAME
     - name: DOCKERHUB_TOKEN
-      valueFrom: { secretKeyRef: { name: dockerhub-credentials, key: DOCKERHUB_TOKEN } }
+      valueFrom:
+        secretKeyRef:
+          name: dockerhub-credentials
+          key: DOCKERHUB_TOKEN
 
     - name: GITHUB_PAT
-      valueFrom: { secretKeyRef: { name: github-ci-token, key: GITHUB_TOKEN } }
+      valueFrom:
+        secretKeyRef:
+          name: github-ci-token
+          key: GITHUB_TOKEN
 
-  # ── JCasC ──────────────────────────────────────────────────────────────────
+  ## ── Configuración JCasC ──────────────────────────────────────────────────
   JCasC:
     enabled: true
     defaultConfig: false
@@ -135,14 +167,19 @@ controller:
                       description: "GitOps PAT"
                       secret: "${GITHUB_PAT}"
 
-  # ── Recursos ───────────────────────────────────────────────────────────────
+  ## ── Recursos ─────────────────────────────────────────────────────────────
   resources:
-    requests: { cpu: 500m, memory: 512Mi }
-    limits:   { cpu: "2", memory: 4Gi }
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 4Gi
 
-# ── Persistencia (Longhorn) ─────────────────────────────────────────────────
+## ── Persistencia con Longhorn ──────────────────────────────────────────────
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
   size: 8Gi
-  annotations: { "longhorn.io/replica-count": "1" }
+  annotations:
+    longhorn.io/replica-count: "1"
