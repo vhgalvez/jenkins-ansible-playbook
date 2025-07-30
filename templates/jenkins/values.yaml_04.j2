@@ -1,18 +1,19 @@
 # templates\jenkins\values.yaml.j2
 ###############################################################################
-# templates/jenkins/values.yaml.j2  —  Producción (solución definitiva)
+# Jenkins Helm values - Producción
 ###############################################################################
 
 controller:
   image:
     repository: jenkins/jenkins
-    tag: "2.518-jdk21"
+    tag: "2.518-jdk21"         # LTS julio - 2025
     pullPolicy: IfNotPresent
-  installWizard: false
+
+  installWizard: false         # desactiva el asistente
   overwritePlugins: false
 
   ###########################################################################
-  # 1) Plugins preinstalados
+  # 1) Plugins pre-instalados
   ###########################################################################
   installPlugins:
     - kubernetes
@@ -35,47 +36,50 @@ controller:
   # 2) Init / Sidecars
   ###########################################################################
   sidecars:
-    initContainer:  { enabled: true }
-    configAutoReload: { enabled: true }
+    initContainer:
+      enabled: true
+    configAutoReload:
+      enabled: true
 
   initContainerEnv:
-    - { name: JENKINS_UC,                       value: https://updates.jenkins.io }
-    - { name: JENKINS_UC_DOWNLOAD,              value: https://updates.jenkins.io/download }
-    - { name: JENKINS_UC_EXPERIMENTAL,          value: https://updates.jenkins.io/experimental }
+    - { name: JENKINS_UC,                value: https://updates.jenkins.io }
+    - { name: JENKINS_UC_DOWNLOAD,       value: https://updates.jenkins.io/download }
+    - { name: JENKINS_UC_EXPERIMENTAL,   value: https://updates.jenkins.io/experimental }
     - { name: JENKINS_INCREMENTALS_REPO_MIRROR, value: https://repo.jenkins-ci.org/incrementals }
 
   ###########################################################################
-  # 3) Secret admin (hash #jbcrypt:)
+  # 3) Credenciales de administrador (no se usan porque JCasC crea el usuario)
   ###########################################################################
   admin:
     existingSecret: jenkins-admin
     userKey:  jenkins-admin-user
-    passwordKey: jenkins-admin-password
+    passwordKey: jenkins-admin-password      # ← texto plano
 
   ###########################################################################
   # 4) Variables de entorno
   ###########################################################################
   env: []
+
+  # ▶ envFrom para DockerHub / GitHub
   envFrom:
     - secretRef: { name: dockerhub-credentials }
     - secretRef: { name: github-ci-token }
 
+  # ▶ containerEnv para exponer las credenciales UI a JCasC
   containerEnv:
     - name: JENKINS_UI_USER
-      valueFrom: { secretKeyRef: { name: jenkins-admin, key: jenkins-admin-user } }
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-admin
+          key: JENKINS_UI_USER
     - name: JENKINS_UI_PASS
-      valueFrom: { secretKeyRef: { name: jenkins-admin, key: jenkins-admin-password } }
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-admin
+          key: JENKINS_UI_PASS
 
   ###########################################################################
-  # 5) StartupProbe
-  ###########################################################################
-  startupProbe:
-    enabled: true
-    failureThreshold: 30
-    periodSeconds: 10
-
-  ###########################################################################
-  # 6) Jenkins Configuration-as-Code
+  # 5) Jenkins Configuration-as-Code (JCasC)
   ###########################################################################
   JCasC:
     enabled: true
@@ -106,21 +110,16 @@ controller:
                 jenkinsTunnel: "{{ .Release.Name }}-agent:50000"
 {% endraw %}
                 templates:
-                  - name: gitops-agent          # ← coincide con Jenkinsfile
-                    label: gitops-agent
+                  - name: default
+                    label: default
                     containers:
-                      - name: nodejs
-                        image: node:18-alpine
-                        command: ["cat"]
-                        ttyEnabled: true
+                      - { name: nodejs, image: node:18-alpine, command: cat, ttyEnabled: true }
                       - name: kaniko
                         image: gcr.io/kaniko-project/executor:v1.23.0-debug
-                        command: ["/busybox/cat"]
+                        command: /busybox/cat
                         ttyEnabled: true
                         envVars:
-                          - envVar:
-                              key: DOCKER_CONFIG
-                              value: /kaniko/.docker
+                          - envVar: { key: DOCKER_CONFIG, value: /kaniko/.docker }
                     volumes:
                       - secretVolume:
                           secretName: dockerhub-config
@@ -132,24 +131,27 @@ controller:
               - credentials:
                   - usernamePassword:
                       id: dockerhub-credentials
+                      description: "🔐 DockerHub CI/CD"
                       username: "${DOCKERHUB_USERNAME}"
                       password: "${DOCKERHUB_TOKEN}"
                   - string:
                       id: github-ci-token
+                      description: "🔐 GitHub Token CI"
                       secret: "${GITHUB_TOKEN}"
 
   ###########################################################################
-  # 7) Recursos
+  # 6) Recursos
   ###########################################################################
   resources:
-    requests: { cpu: 500m, memory: 512Mi }
+    requests: { cpu: 200m, memory: 512Mi }
     limits:   { cpu: "2",  memory: 4Gi }
 
 ###############################################################################
-# 8) Persistencia (Longhorn)
+# 7) Persistencia (Longhorn)
 ###############################################################################
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
   size: 8Gi
-  annotations: { "longhorn.io/replica-count": "1" }
+  annotations:
+    "longhorn.io/replica-count": "1"
