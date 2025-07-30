@@ -7,6 +7,7 @@ controller:
   installWizard: false
   overwritePlugins: false
 
+  # ‑‑‑ Plugins ------------------------------------------------------------
   installPlugins:
     - kubernetes
     - workflow-aggregator
@@ -22,20 +23,20 @@ controller:
     - blueocean
     - configuration-as-code
     - pipeline-stage-view
-    - sse-gateway        # ← dependencia de stage‑view
+    - sse-gateway               # dep. de stage‑view
 
-  # Sidecars
+  # ‑‑‑ Sidecars -----------------------------------------------------------
   sidecars:
     initContainer:    { enabled: true }
     configAutoReload: { enabled: true }
 
-  # Credencial admin creada por Ansible
+  # ‑‑‑ Admin secret -------------------------------------------------------
   admin:
     existingSecret: jenkins-admin
     userKey:        jenkins-admin-user
     passwordKey:    jenkins-admin-password
 
-  # Secrets externos
+  # ‑‑‑ External Secrets ---------------------------------------------------
   envFrom:
     - secretRef: { name: dockerhub-credentials }
     - secretRef: { name: github-ci-token }
@@ -46,7 +47,7 @@ controller:
     - name: JENKINS_UI_PASS
       valueFrom: { secretKeyRef: { name: jenkins-admin, key: jenkins-admin-password } }
 
-  # JCasC
+  # ‑‑‑ JCasC --------------------------------------------------------------
   JCasC:
     enabled: true
     defaultConfig: false
@@ -63,6 +64,7 @@ controller:
           authorizationStrategy:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
+
           clouds:
             - kubernetes:
                 name: kubernetes
@@ -74,30 +76,27 @@ controller:
                 jenkinsTunnel: "{{ .Release.Name }}-agent:50000"
 {% endraw %}
                 templates:
-                  # — default —
+                  # --- default ------------------------------------------------
                   - name: default
                     label: default
                     containers:
                       - name: busybox
                         image: busybox:1.36
                         command: ["cat"]
-                        ttyEnabled: true
-                        stdin: true
+                        ttyEnabled: true      #  ←  *sin* stdin
 
-                  # — gitops+kaniko —
+                  # --- gitops + kaniko ---------------------------------------
                   - name: gitops-agent
                     label: gitops-agent
                     containers:
                       - name: nodejs
                         image: node:18-alpine
                         command: ["cat"]
-                        ttyEnabled: true
-                        stdin: true
+                        ttyEnabled: true      #  ←  *sin* stdin
                       - name: kaniko
                         image: gcr.io/kaniko-project/executor:v1.23.0-debug
                         command: ["/busybox/cat"]
-                        ttyEnabled: true
-                        stdin: true
+                        ttyEnabled: true      #  ←  *sin* stdin
                         envVars:
                           - envVar:
                               key: DOCKER_CONFIG
@@ -119,6 +118,7 @@ controller:
                       id: github-ci-token
                       secret: "${GITHUB_TOKEN}"
 
+  # ‑‑‑ Resources ----------------------------------------------------------
   resources:
     requests: { cpu: 500m, memory: 512Mi }
     limits:   { cpu: "2", memory: 4Gi }
