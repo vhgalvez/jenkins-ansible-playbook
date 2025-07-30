@@ -1,5 +1,5 @@
 ###############################################################################
-# templates/jenkins/values.yaml.j2 – Producción (rev‑16 · stable‑boot)
+# templates/jenkins/values.yaml.j2 – Producción (rev‑17 · final)
 ###############################################################################
 
 controller:
@@ -7,11 +7,11 @@ controller:
     repository: jenkins/jenkins
     tag: "2.518-jdk21"
   installWizard: false
-  overwritePlugins: false          # evitamos que Helm machaque plugins al actualizar
+  overwritePlugins: false   # evita sobrescribir plugins en upgrades
 
   # ── Plugins ────────────────────────────────────────────────────────────────
   installPlugins:
-    # Core / API libs
+    # — API / libs base (se cargan rápido y evitan fallos de dependencias) —
     - structs
     - display-url-api
     - jackson2-api
@@ -27,44 +27,31 @@ controller:
     - bouncycastle-api
     - token-macro
 
-    # Base funcional
+    # — Funcionalidad principal —
     - configuration-as-code
     - kubernetes
     - matrix-auth
     - credentials
-    - ssh-credentials
     - plain-credentials
     - credentials-binding
+    - ssh-credentials
     - git
     - github
     - github-branch-source
 
-    # Pipeline (detallado, sin agregador)
-    - script-security
-    - workflow-api
-    - workflow-step-api
-    - workflow-support
-    - workflow-basic-steps
-    - workflow-scm-step
-    - workflow-durable-task-step
-    - workflow-cps
-    - workflow-job
-    - pipeline-build-step
-    - pipeline-stage-step
-    - pipeline-model-definition
-    - pipeline-rest-api
-    - pipeline-stage-view
+    # — Pipeline completo (un solo metapaquete) —
+    - workflow-aggregator          # incluye TODOS los *workflow‑* & Pipeline libs
 
-    # Mail / Jakarta
+    # — Mail / Jakarta —
     - jakarta-mail-api
     - jakarta-activation-api
     - mailer
 
-    # CI / UI
+    # — CI / UI —
     - docker-workflow
-    - blueocean
-    - sse-gateway
-    - event-router             # dependencia de sse‑gateway
+    - blueocean                    # incluye internamente «event-router» y demases
+    - sse-gateway                  # notificaciones SSE
+    - script-security              # necesario para groovy / Pipeline
 
   # ── Sidecars ───────────────────────────────────────────────────────────────
   sidecars:
@@ -92,7 +79,7 @@ controller:
     - name: GITHUB_PAT
       valueFrom: { secretKeyRef: { name: github-ci-token, key: GITHUB_TOKEN } }
 
-  # ── JCasC ──────────────────────────────────────────────────────────────────
+  # ── JCasC (sin cambios salvo bug fix de envVar) ────────────────────────────
   JCasC:
     enabled: true
     defaultConfig: false
@@ -141,7 +128,7 @@ controller:
                         command: ["/busybox/cat"]
                         ttyEnabled: true
                         envVars:
-                          - envVar:              # ✅ forma correcta
+                          - envVar:          # ✔️ sintaxis correcta
                               key: DOCKER_CONFIG
                               value: /kaniko/.docker
                     volumes:
