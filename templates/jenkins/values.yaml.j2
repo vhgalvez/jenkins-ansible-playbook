@@ -1,6 +1,7 @@
 ###############################################################################
-# templates/jenkins/values.yaml.j2  – Producción  (rev‑12 · credentials‑scope)
+# templates/jenkins/values.yaml.j2  – Producción  (rev‑13 · domain‑fix)
 ###############################################################################
+
 controller:
   image:
     repository: jenkins/jenkins
@@ -50,10 +51,7 @@ controller:
       valueFrom: { secretKeyRef: { name: dockerhub-credentials, key: DOCKERHUB_TOKEN } }
 
     - name: GITHUB_PAT
-      valueFrom:
-        secretKeyRef:
-          name: github-ci-token
-          key: GITHUB_TOKEN        # la clave REAL del Secret
+      valueFrom: { secretKeyRef: { name: github-ci-token, key: GITHUB_TOKEN } }
 
   # ── JCasC ──────────────────────────────────────────────────────────────────
   JCasC:
@@ -106,17 +104,16 @@ controller:
 
         credentials:
           system:
-            # dominio "global" (obligatorio) ↓↓↓
             domainCredentials:
-              - domain:
-                  specifications: []
-                credentials:
+              # ------------- GLOBAL -------------
+              - credentials:
                   - usernamePassword:
                       scope: GLOBAL
                       id: dockerhub-credentials
                       description: "DockerHub CI"
                       username: "${DOCKERHUB_USERNAME}"
                       password: "${DOCKERHUB_TOKEN}"
+
                   - string:
                       scope: GLOBAL
                       id: github-ci-token
