@@ -1,5 +1,5 @@
 ###############################################################################
-# templates/jenkins/values.yaml.j2  - Producción  (rev-10  · credFix)
+# templates/jenkins/values.yaml.j2  -  Producción  (rev-9 - estable)
 ###############################################################################
 controller:
   image:
@@ -24,36 +24,31 @@ controller:
     - blueocean
     - configuration-as-code
     - pipeline-stage-view
-    - sse-gateway
+    - sse-gateway           # dependencia de stage‑view
 
   # ── Sidecars ───────────────────────────────────────────────────────────────
   sidecars:
     initContainer:    { enabled: true }
     configAutoReload: { enabled: true }
 
-  # ── Credencial admin ───────────────────────────────────────────────────────
+  # ── Credencial admin (SealedSecret) ────────────────────────────────────────
   admin:
     existingSecret: jenkins-admin
     userKey:        jenkins-admin-user
     passwordKey:    jenkins-admin-password
 
-  # ── Variables de entorno  (¡¡sin envFrom!!) ───────────────────────────────
+  # ── Secrets → variables de entorno ────────────────────────────────────────
+  envFrom:
+    - secretRef: { name: dockerhub-credentials }   # DOCKERHUB_USERNAME|TOKEN
+    - secretRef: { name: github-ci-token }         # GITHUB_TOKEN
+
   containerEnv:
-    # → credenciales de la UI
     - name: JENKINS_UI_USER
       valueFrom: { secretKeyRef: { name: jenkins-admin, key: jenkins-admin-user } }
     - name: JENKINS_UI_PASS
       valueFrom: { secretKeyRef: { name: jenkins-admin, key: jenkins-admin-password } }
 
-    # → credenciales externas que necesita JCasC
-    - name: DOCKERHUB_USERNAME
-      valueFrom: { secretKeyRef: { name: dockerhub-credentials, key: DOCKERHUB_USERNAME } }
-    - name: DOCKERHUB_TOKEN
-      valueFrom: { secretKeyRef: { name: dockerhub-credentials, key: DOCKERHUB_TOKEN } }
-    - name: GITHUB_PAT                     # <<——  nombre que usa el pipeline
-      valueFrom: { secretKeyRef: { name: github-ci-token, key: GITHUB_PAT } }
-
-  # ── Config‑as‑Code ────────────────────────────────────────────────────────
+  # ── JCasC ──────────────────────────────────────────────────────────────────
   JCasC:
     enabled: true
     defaultConfig: false
@@ -82,32 +77,35 @@ controller:
                 jenkinsTunnel: "{{ .Release.Name }}-agent:50000"
 {% endraw %}
                 templates:
+                  # — default ————————————————————————————————————————
                   - name: default
                     label: default
                     containers:
                       - name: busybox
                         image: busybox:1.36
-                        command: ["cat"]
+                        command: "cat"
                         ttyEnabled: true
 
+                  # — gitops + kaniko ————————————————————————————————
                   - name: gitops-agent
                     label: gitops-agent
                     containers:
                       - name: nodejs
                         image: node:18-alpine
-                        command: ["cat"]
+                        command: "cat"
                         ttyEnabled: true
                       - name: kaniko
                         image: gcr.io/kaniko-project/executor:v1.23.0-debug
-                        command: ["/busybox/cat"]
+                        command: "/busybox/cat"
                         ttyEnabled: true
-                        envVars:
-                          - key: DOCKER_CONFIG
-                            value: /kaniko/.docker
+                        envVars:                # ← NIVEL ‘envVar’ añadido
+                          - envVar:
+                              key: DOCKER_CONFIG
+                              value: /kaniko/.docker
                     volumes:
                       - secretVolume:
-                          secretName: dockerhub-config
                           mountPath: /kaniko/.docker
+                          secretName: dockerhub-config
 
         credentials:
           system:
@@ -118,15 +116,15 @@ controller:
                       username: "${DOCKERHUB_USERNAME}"
                       password: "${DOCKERHUB_TOKEN}"
                   - string:
-                      id: github-ci-token        # << Jenkins credential ID
-                      description: "GitOps PAT"
-                      secret: "${GITHUB_PAT}"    # << usa la env var que sí existe
+                      id: github-ci-token
+                      secret: "${GITHUB_TOKEN}"
 
   # ── Recursos ───────────────────────────────────────────────────────────────
   resources:
     requests: { cpu: 500m, memory: 512Mi }
-    limits:   { cpu: "2", memory: 4Gi }
+    limits:   { cpu: "2",  memory: 4Gi }
 
+# ── Persistencia (Longhorn) ────────────────────────────────────────────────
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
