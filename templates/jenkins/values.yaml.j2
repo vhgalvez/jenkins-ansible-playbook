@@ -60,7 +60,7 @@ controller:
   ###########################################################################
   env: []
 
-  # ▶ envFrom para DockerHub / GitHub
+  # ▶ envFrom para DockerHub / GitHub
   envFrom:
     - secretRef: { name: dockerhub-credentials }
     - secretRef: { name: github-ci-token }
