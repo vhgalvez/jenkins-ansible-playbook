@@ -6,10 +6,10 @@
 controller:
   image:
     repository: jenkins/jenkins
-    tag: "2.518-jdk21"           # LTS jul-2025
+    tag: "2.518-jdk21"         # LTS julio‑2025
     pullPolicy: IfNotPresent
 
-  installWizard: false
+  installWizard: false         # desactiva el asistente
   overwritePlugins: false
 
   ###########################################################################
@@ -41,8 +41,6 @@ controller:
     configAutoReload:
       enabled: true
 
-  # 👉 ENV extra para el initContainer que descarga plugins
-  #    Usa mirrors oficiales que no redirigen a Cloudflare
   initContainerEnv:
     - { name: JENKINS_UC,                value: https://updates.jenkins.io }
     - { name: JENKINS_UC_DOWNLOAD,       value: https://updates.jenkins.io/download }
@@ -50,35 +48,53 @@ controller:
     - { name: JENKINS_INCREMENTALS_REPO_MIRROR, value: https://repo.jenkins-ci.org/incrementals }
 
   ###########################################################################
-  # 3) Credenciales de administrador
+  # 3) Credenciales de administrador (no se usan porque JCasC crea el usuario)
   ###########################################################################
   admin:
     existingSecret: jenkins-admin
-    userKey: jenkins-admin-user
-    passwordKey: jenkins-admin-password      # hash bcrypt
+    userKey:  jenkins-admin-user
+    passwordKey: jenkins-admin-password      # ← texto plano
 
   ###########################################################################
-  # 4) Variables de entorno → Secrets
+  # 4) Variables de entorno
   ###########################################################################
   env: []
+
+  # ▶ envFrom para DockerHub / GitHub
   envFrom:
     - secretRef: { name: dockerhub-credentials }
     - secretRef: { name: github-ci-token }
 
+  # ▶ containerEnv para exponer las credenciales UI a JCasC
+  containerEnv:
+    - name: JENKINS_UI_USER
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-admin
+          key: JENKINS_UI_USER
+    - name: JENKINS_UI_PASS
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-admin
+          key: JENKINS_UI_PASS
+
   ###########################################################################
-  # 5) Jenkins Configuration-as-Code
+  # 5) Jenkins Configuration-as-Code (JCasC)
   ###########################################################################
   JCasC:
     enabled: true
     defaultConfig: false
     configScripts:
-      # ───────────────────────────
-      main: |
+      00-security: |
         jenkins:
           systemMessage: "🚀 Jenkins en producción"
           securityRealm:
             local:
               allowsSignup: false
+              enableCaptcha: false
+              users:
+                - id: "${JENKINS_UI_USER}"
+                  password: "${JENKINS_UI_PASS}"
           authorizationStrategy:
             loggedInUsersCanDoAnything:
               allowAnonymousRead: false
@@ -105,7 +121,9 @@ controller:
                         envVars:
                           - envVar: { key: DOCKER_CONFIG, value: /kaniko/.docker }
                     volumes:
-                      - secretVolume: { secretName: dockerhub-config, mountPath: /kaniko/.docker }
+                      - secretVolume:
+                          secretName: dockerhub-config
+                          mountPath: /kaniko/.docker
 
         credentials:
           system:
