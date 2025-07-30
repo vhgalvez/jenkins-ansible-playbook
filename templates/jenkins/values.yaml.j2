@@ -1,4 +1,6 @@
-# templates\jenkins\values.yaml.j2
+###############################################################################
+# templates/jenkins/values.yaml.j2  -  Producción  (rev-9 - estable)
+###############################################################################
 controller:
   image:
     repository: jenkins/jenkins
@@ -6,10 +8,9 @@ controller:
   installWizard: false
   overwritePlugins: false
 
-  # ───Plugins ────────────────────────────────────────────────────────────
+  # ── Plugins ────────────────────────────────────────────────────────────────
   installPlugins:
     - kubernetes
-    - kubernetes-credentials-provider   # ← nuevo
     - workflow-aggregator
     - git
     - job-dsl
@@ -23,23 +24,23 @@ controller:
     - blueocean
     - configuration-as-code
     - pipeline-stage-view
-    - sse-gateway                       # dep. de stage‑view
+    - sse-gateway           # dependencia de stage‑view
 
-  # ───Sidecars ───────────────────────────────────────────────────────────
+  # ── Sidecars ───────────────────────────────────────────────────────────────
   sidecars:
     initContainer:    { enabled: true }
     configAutoReload: { enabled: true }
 
-  # ───Credencial admin (creada por Ansible) ──────────────────────────────
+  # ── Credencial admin (SealedSecret) ────────────────────────────────────────
   admin:
     existingSecret: jenkins-admin
     userKey:        jenkins-admin-user
     passwordKey:    jenkins-admin-password
 
-  # ───Secrets → env vars ─────────────────────────────────────────────────
+  # ── Secrets → variables de entorno ────────────────────────────────────────
   envFrom:
-    - secretRef: { name: dockerhub-credentials }   # debe exponer DOCKERHUB_USERNAME / DOCKERHUB_TOKEN
-    - secretRef: { name: github-ci-token }         # debe exponer GITHUB_TOKEN
+    - secretRef: { name: dockerhub-credentials }   # DOCKERHUB_USERNAME|TOKEN
+    - secretRef: { name: github-ci-token }         # GITHUB_TOKEN
 
   containerEnv:
     - name: JENKINS_UI_USER
@@ -47,7 +48,7 @@ controller:
     - name: JENKINS_UI_PASS
       valueFrom: { secretKeyRef: { name: jenkins-admin, key: jenkins-admin-password } }
 
-  # ───JCasC ──────────────────────────────────────────────────────────────
+  # ── JCasC ──────────────────────────────────────────────────────────────────
   JCasC:
     enabled: true
     defaultConfig: false
@@ -97,13 +98,14 @@ controller:
                         image: gcr.io/kaniko-project/executor:v1.23.0-debug
                         command: "/busybox/cat"
                         ttyEnabled: true
-                        envVars:
-                          - key: DOCKER_CONFIG
-                            value: /kaniko/.docker
+                        envVars:                # ← NIVEL ‘envVar’ añadido
+                          - envVar:
+                              key: DOCKER_CONFIG
+                              value: /kaniko/.docker
                     volumes:
                       - secretVolume:
-                          secretName: dockerhub-config
                           mountPath: /kaniko/.docker
+                          secretName: dockerhub-config
 
         credentials:
           system:
@@ -117,12 +119,12 @@ controller:
                       id: github-ci-token
                       secret: "${GITHUB_TOKEN}"
 
-  # ───Recursos───────────────────────────────────────────────────────────
+  # ── Recursos ───────────────────────────────────────────────────────────────
   resources:
     requests: { cpu: 500m, memory: 512Mi }
-    limits:   { cpu: "2", memory: 4Gi }
+    limits:   { cpu: "2",  memory: 4Gi }
 
-# ───Persistencia (Longhorn) ─────────────────────────────────────────────
+# ── Persistencia (Longhorn) ────────────────────────────────────────────────
 persistence:
   enabled: true
   storageClass: "{{ jenkins_storage_class }}"
