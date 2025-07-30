@@ -9,7 +9,7 @@ controller:
   # ───Plugins ────────────────────────────────────────────────────────────
   installPlugins:
     - kubernetes
-    - kubernetes-credentials-provider   # ←nuevo
+    - kubernetes-credentials-provider   # ← nuevo
     - workflow-aggregator
     - git
     - job-dsl
@@ -23,7 +23,7 @@ controller:
     - blueocean
     - configuration-as-code
     - pipeline-stage-view
-    - sse-gateway                       # dep. de stage-view
+    - sse-gateway                       # dep. de stage‑view
 
   # ───Sidecars ───────────────────────────────────────────────────────────
   sidecars:
@@ -117,7 +117,7 @@ controller:
                       id: github-ci-token
                       secret: "${GITHUB_TOKEN}"
 
-  # ───Recursos ────────────────────────────────────────────────────────────
+  # ───Recursos───────────────────────────────────────────────────────────
   resources:
     requests: { cpu: 500m, memory: 512Mi }
     limits:   { cpu: "2", memory: 4Gi }
