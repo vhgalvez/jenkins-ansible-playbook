@@ -1,5 +1,5 @@
 ###############################################################################
-# templates/jenkins/values.yaml.j2       - Producción (30 -Jul - 2025)
+# templates/jenkins/values.yaml.j2       - Producción (30-Jul-2025)
 ###############################################################################
 
 controller:
@@ -24,7 +24,6 @@ controller:
     - docker-workflow
     - blueocean
     - configuration-as-code
-    - sse-gateway
     - pipeline-stage-view
 
   sidecars:
@@ -106,9 +105,8 @@ controller:
                         command: ["/busybox/cat"]
                         ttyEnabled: true
                         envVars:
-                          - envVar:
-                              key: DOCKER_CONFIG
-                              value: /kaniko/.docker
+                          - key: DOCKER_CONFIG
+                            value: /kaniko/.docker
                     volumes:
                       - secretVolume:
                           secretName: dockerhub-config
