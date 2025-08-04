@@ -99,17 +99,12 @@ export JENKINS_AUTH_PASS_UI="SuperPassword123"
   kubectl logs -f -n jenkins jenkins-0 -c init-config
   ```
 
-## 🔥 Siguientes pasos
 
-1. **Crea un repositorio en GitHub:**
+## ✍️ Autor
 
-   - Nombre sugerido: `jenkins-ansible-playbook`
+**Víctor Hugo Gálvez Sastoque**  
+Especialista en DevOps, Infraestructura, Kubernetes y Automatización.  
+Ingeniero con visión estratégica orientado a soluciones escalables y eficientes.
 
-2. **Sube esta estructura básica al repositorio.**
-
-3. **Inicializa el `README.md` con la información proporcionada.**
-
-4. (Opcional) **Activar entorno virtual de Python si tienes uno configurado:**
-   ```bash
-   source venv/bin/activate
-   ```
+- 🌐 **GitHub:** [@vhgalvez](https://github.com/vhgalvez)
+- 💼 **LinkedIn:** [victor-hugo-galvez-sastoque](https://www.linkedin.com/in/victor-hugo-galvez-sastoque/)
